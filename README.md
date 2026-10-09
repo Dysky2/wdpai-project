@@ -20,7 +20,7 @@ Jedno zdanie: jaki problem rozwiązujemy, dla kogo i w jaki sposób.
 
 ```bash
 git clone https://github.com/Dysky2/wdpai-project.git
-cd REPOZYTORIUM
+cd wdpai-project
 docker compose up --build -d
 ```
 
