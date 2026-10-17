@@ -15,6 +15,7 @@ $routing->get('/projects/{id}', ProjectController::class, 'show');
 $routing->get('/', DefaultController::class, 'index');
 $routing->get('/login', SecurityController::class, 'login');
 $routing->get('/register', SecurityController::class, 'register');
+$routing->get('/profil/{id}', SecurityController::class, 'profil');
 
 $routeFound = $routing->dispatch(
     $_SERVER['REQUEST_METHOD'],
