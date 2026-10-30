@@ -3,12 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <title><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-    <main>
-        <h1>Strona główna</h1>
-        <a href="/projects">Zobacz projekty</a>
-    </main>
+<body class="dashboard-page">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="/" aria-label="F1 Stewards, strona główna">
+                <span class="brand-mark">F1</span>
+                <span>
+                    <strong>STEWARDS</strong>
+                    <small>CONTROL ROOM</small>
+                </span>
+            </a>
+
+            <nav class="main-nav" aria-label="Główna nawigacja">
+                <a class="nav-link nav-link--active" href="/" aria-current="page">
+                    <span aria-hidden="true">▦</span> Dashboard
+                </a>
+                <a class="nav-link" href="/projects">
+                    <span aria-hidden="true">◈</span> Sprawy
+                </a>
+                <a class="nav-link" href="/about">
+                    <span aria-hidden="true">ⓘ</span> O panelu
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="live-dot" aria-hidden="true"></span>
+                <span><strong>System online</strong><small>Synchronizacja aktywna</small></span>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">FIA / RACE CONTROL</p>
+                    <h1><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-button" type="button" aria-label="Powiadomienia">
+                        <span aria-hidden="true">♧</span><i></i>
+                    </button>
+                    <div class="user-chip">
+                        <span class="avatar avatar--small">MK</span>
+                        <span><strong>M. Kowalska</strong><small>Przewodnicząca</small></span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="hero-card" aria-labelledby="race-heading">
+                <div>
+                    <p class="eyebrow eyebrow--light">NASTĘPNE POSIEDZENIE</p>
+                    <h2 id="race-heading"><?= htmlspecialchars((string) $race['name'], ENT_QUOTES, 'UTF-8') ?></h2>
+                    <p class="hero-meta"><?= htmlspecialchars((string) $race['round'], ENT_QUOTES, 'UTF-8') ?> <span>•</span> <?= htmlspecialchars((string) $race['date'], ENT_QUOTES, 'UTF-8') ?></p>
+                </div>
+                <span class="status-badge status-badge--light"><i></i><?= htmlspecialchars((string) $race['status'], ENT_QUOTES, 'UTF-8') ?></span>
+            </section>
+
+            <section class="stats-grid" aria-label="Podsumowanie weekendu wyścigowego">
+                <?php foreach ($stats as $stat): ?>
+                    <article class="stat-card">
+                        <p><?= htmlspecialchars((string) $stat['label'], ENT_QUOTES, 'UTF-8') ?></p>
+                        <strong><?= htmlspecialchars((string) $stat['value'], ENT_QUOTES, 'UTF-8') ?></strong>
+                        <span><?= htmlspecialchars((string) $stat['trend'], ENT_QUOTES, 'UTF-8') ?></span>
+                    </article>
+                <?php endforeach; ?>
+            </section>
+
+            <div class="content-grid">
+                <section class="panel panel--cases" aria-labelledby="cases-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">PRIORYTETOWE ZGŁOSZENIA</p>
+                            <h2 id="cases-heading">Sprawy do rozpatrzenia</h2>
+                        </div>
+                        <a class="text-link" href="/projects">Zobacz wszystkie <span aria-hidden="true">→</span></a>
+                    </div>
+                    <div class="case-list">
+                        <a class="case-row" href="/projects/1">
+                            <span class="case-number">01</span>
+                            <span class="case-info"><strong>Incydent na torze</strong><small>Verstappen / Norris · Zakręt 4</small></span>
+                            <span class="priority priority--high">Wysoki</span>
+                            <span class="case-arrow" aria-hidden="true">→</span>
+                        </a>
+                        <a class="case-row" href="/projects/2">
+                            <span class="case-number">02</span>
+                            <span class="case-info"><strong>Przekroczenie limitów toru</strong><small>Leclerc · Okrążenie 38</small></span>
+                            <span class="priority priority--medium">Średni</span>
+                            <span class="case-arrow" aria-hidden="true">→</span>
+                        </a>
+                        <a class="case-row" href="/projects/3">
+                            <span class="case-number">03</span>
+                            <span class="case-info"><strong>Niebezpieczne wypuszczenie</strong><small>Box Ferrari · Pit lane</small></span>
+                            <span class="priority priority--low">Niski</span>
+                            <span class="case-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="panel" aria-labelledby="team-heading">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">ZESPÓŁ SĘDZIOWSKI</p>
+                            <h2 id="team-heading">Dyżur dzisiaj</h2>
+                        </div>
+                        <span class="team-count"><?= count($judges) ?> osoby</span>
+                    </div>
+                    <div class="judge-list">
+                        <?php foreach ($judges as $judge): ?>
+                            <div class="judge-row">
+                                <span class="avatar"><?= htmlspecialchars((string) $judge['initials'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="judge-info"><strong><?= htmlspecialchars((string) $judge['name'], ENT_QUOTES, 'UTF-8') ?></strong><small><?= htmlspecialchars((string) $judge['role'], ENT_QUOTES, 'UTF-8') ?></small></span>
+                                <span class="online-status"><i></i><?= htmlspecialchars((string) $judge['status'], ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <a class="outline-button" href="/about">Zarządzaj zespołem <span aria-hidden="true">↗</span></a>
+                </section>
+            </div>
+        </main>
+    </div>
 </body>
 </html>

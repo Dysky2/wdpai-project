@@ -10,7 +10,23 @@ final class DefaultController extends AppController
     public function index(): void
     {
         $this->render('home', [
-            'pageTitle' => 'Moja aplikacja',
+            'pageTitle' => 'Panel sędziów F1',
+            'race' => [
+                'name' => 'Grand Prix São Paulo',
+                'round' => 'Runda 21 / 24',
+                'date' => '03 LISTOPADA 2026',
+                'status' => 'W toku',
+            ],
+            'stats' => [
+                ['label' => 'Otwarte sprawy', 'value' => '04', 'trend' => '+2 dziś'],
+                ['label' => 'Rozstrzygnięte', 'value' => '18', 'trend' => 'Ten weekend'],
+                ['label' => 'Czas reakcji', 'value' => '08 min', 'trend' => '-12% vs. poprzednio'],
+            ],
+            'judges' => [
+                ['name' => 'Marta Kowalska', 'role' => 'Przewodnicząca panelu', 'status' => 'Aktywna', 'initials' => 'MK'],
+                ['name' => 'James Wilson', 'role' => 'Sędzia FIA', 'status' => 'Aktywny', 'initials' => 'JW'],
+                ['name' => 'Rafael Silva', 'role' => 'Doradca kierowców', 'status' => 'Aktywny', 'initials' => 'RS'],
+            ],
         ]);
     }
 
