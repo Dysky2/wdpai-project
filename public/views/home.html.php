@@ -8,32 +8,7 @@
 </head>
 <body class="dashboard-page">
     <div class="app-shell">
-        <aside class="sidebar">
-            <a class="brand" href="/" aria-label="F1 Stewards, strona główna">
-                <span class="brand-mark">F1</span>
-                <span>
-                    <strong>STEWARDS</strong>
-                    <small>CONTROL ROOM</small>
-                </span>
-            </a>
-
-            <nav class="main-nav" aria-label="Główna nawigacja">
-                <a class="nav-link nav-link--active" href="/" aria-current="page">
-                    <span aria-hidden="true">▦</span> Dashboard
-                </a>
-                <a class="nav-link" href="/projects">
-                    <span aria-hidden="true">◈</span> Sprawy
-                </a>
-                <a class="nav-link" href="/about">
-                    <span aria-hidden="true">ⓘ</span> O panelu
-                </a>
-            </nav>
-
-            <div class="sidebar-footer">
-                <span class="live-dot" aria-hidden="true"></span>
-                <span><strong>System online</strong><small>Synchronizacja aktywna</small></span>
-            </div>
-        </aside>
+        <?php require __DIR__ . '/partials/navigation.html.php'; ?>
 
         <main class="dashboard-main">
             <header class="topbar">

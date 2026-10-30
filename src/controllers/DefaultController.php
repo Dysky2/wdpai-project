@@ -11,6 +11,7 @@ final class DefaultController extends AppController
     {
         $this->render('home', [
             'pageTitle' => 'Panel sędziów F1',
+            'activeRoute' => '/',
             'race' => [
                 'name' => 'Grand Prix São Paulo',
                 'round' => 'Runda 21 / 24',
