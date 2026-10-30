@@ -20,4 +20,18 @@ final class SecurityController extends AppController
         ]);
     }
 
+    public function profil(int $id): void 
+    {
+        $name = 'jan_kowalski';
+        $email = 'jan.kowalski@example.com';
+        $role = 'Użytkownik';
+
+        $this->render('profil', [
+            'pageTitle' => 'Szczegóły profilu usera',
+            'profilId' => $id,
+            'profilName' => $name,
+            'profilEmail' => $email,
+            'profilRole' => $role,
+        ]);
+    }
 }
