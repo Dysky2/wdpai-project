@@ -11,6 +11,7 @@ final class DefaultController extends AppController
     {
         $this->render('home', [
             'pageTitle' => 'Panel sędziów F1',
+            'bodyClass' => 'dashboard-page',
             'activeRoute' => '/',
             'race' => [
                 'name' => 'Grand Prix São Paulo',
@@ -35,6 +36,7 @@ final class DefaultController extends AppController
     {
         $this->render('not-found', [
             'pageTitle' => 'Nie znaleziono strony',
+            'bodyClass' => 'dashboard-page',
         ]);
     }
 }

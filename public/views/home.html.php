@@ -1,31 +1,22 @@
-<!doctype html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body class="dashboard-page">
-    <div class="app-shell">
-        <?php require __DIR__ . '/partials/navigation.html.php'; ?>
+<div class="app-shell">
+    <?php require __DIR__ . '/partials/navigation.html.php'; ?>
 
-        <main class="dashboard-main">
-            <header class="topbar">
-                <div>
-                    <p class="eyebrow">FIA / RACE CONTROL</p>
-                    <h1><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">FIA / RACE CONTROL</p>
+                <h1><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="icon-button" type="button" aria-label="Powiadomienia">
+                    <span aria-hidden="true">♧</span><i></i>
+                </button>
+                <div class="user-chip">
+                    <span class="avatar avatar--small">MK</span>
+                    <span><strong>M. Kowalska</strong><small>Przewodnicząca</small></span>
                 </div>
-                <div class="topbar-actions">
-                    <button class="icon-button" type="button" aria-label="Powiadomienia">
-                        <span aria-hidden="true">♧</span><i></i>
-                    </button>
-                    <div class="user-chip">
-                        <span class="avatar avatar--small">MK</span>
-                        <span><strong>M. Kowalska</strong><small>Przewodnicząca</small></span>
-                    </div>
-                </div>
-            </header>
+            </div>
+        </header>
 
             <section class="hero-card" aria-labelledby="race-heading">
                 <div>
@@ -97,7 +88,5 @@
                     <a class="outline-button" href="/about">Zarządzaj zespołem <span aria-hidden="true">↗</span></a>
                 </section>
             </div>
-        </main>
-    </div>
-</body>
-</html>
+    </main>
+</div>
