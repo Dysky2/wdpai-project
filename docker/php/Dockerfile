@@ -32,6 +32,6 @@ RUN { \
       echo 'upload_max_filesize = 512M'; \
       echo 'post_max_size = 512M'; \
       echo 'max_file_uploads = 20'; \
-    } > /usr/local/etc/php/conf.d/mealplanner.ini
+    } > /usr/local/etc/php/conf.d/app.ini
 
 COPY . .
