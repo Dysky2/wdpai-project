@@ -8,3 +8,10 @@ docker/data/
 kryteria.md
 AGENTS.md
 docs/
+
+# Uploads & Storage
+/uploads/
+/public/uploads/*
+!/public/uploads/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
