@@ -58,6 +58,42 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 
 ---
 
+## Architektura aplikacji (MVC)
+
+Projekt wykorzystuje warstwową architekturę MVC bez zewnętrznego frameworka. Każda warstwa ma jasno zdefiniowaną odpowiedzialność i kierunek zależności.
+
+```mermaid
+flowchart TD
+    Browser["🌐 Przeglądarka"] -->|HTTP request| Nginx["Nginx\n(reverse proxy)"]
+    Nginx -->|FastCGI| FPM["PHP-FPM\npublic/index.php"]
+    FPM --> Router["App\\Http\\Router\n(dopasowanie metody + wzorca URL)"]
+    Router --> MW["Middleware\n(AuthMiddleware, RoleMiddleware)"]
+    MW --> Controller["Controller\n(App\\Controller\\*)"]
+    Controller --> Service["Service\n(logika domenowa)"]
+    Service --> Repository["Repository\n(interfejs + impl. PDO)"]
+    Repository -->|SQL query| DB[("PostgreSQL 16")]
+    Repository --> Service
+    Service --> Controller
+    Controller -->|Response| MW
+    MW --> Router
+    Router -->|HTML / JSON| Browser
+    DB --> Repository
+```
+
+### Warstwy i odpowiedzialności
+
+| Warstwa | Namespace / Ścieżka | Odpowiedzialność |
+|---|---|---|
+| **Router** | `App\Http\Router` | Dopasowanie URL+metody, wyodrębnienie parametrów, uruchomienie łańcucha middleware |
+| **Middleware** | `App\Middleware\*` | Uwierzytelnianie (`AuthMiddleware`), autoryzacja ról (`RoleMiddleware`), CSRF |
+| **Controller** | `App\Controller\*` | Przyjmuje Request, waliduje dane wejściowe, deleguje do Service, zwraca Response |
+| **Service** | `App\Service\*` | Cała logika biznesowa; brak SQL, brak HTML; operacje transakcyjne ACID |
+| **Repository** | `App\Repository\*` | Jedyne miejsce z SQL; zaimplementowane przez interfejsy; wstrzykiwane przez DI |
+| **Model** | `App\Model\*` | Niemutowalne encje domenowe (immutable value objects, metody `with*()`) |
+| **View** | `public/views/` | Czysty HTML + PHP pętle/warunki; tylko `htmlspecialchars()` bez logiki |
+
+---
+
 ## Szybki start (Czyste środowisko)
 
 ```bash
