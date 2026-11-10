@@ -1,183 +1,150 @@
-# AGENTS.md
+# AGENTS.md — ApexSteward (FIA Stewards Hub)
 
-Ten plik jest przewodnikiem dla agentow AI pracujacych w tym repozytorium. Przed wprowadzeniem zmian przeczytaj go razem z `README.md` i sprawdz aktualny stan kodu. Nie zakladaj, ze opisana funkcja istnieje, dopoki nie potwierdzisz tego w plikach projektu.
+Ten plik jest głównym przewodnikiem dla agentów AI pracujących w tym repozytorium. Przed wprowadzeniem jakichkolwiek zmian zapoznaj się z tym plikiem, dokumentacją domeny w karcie projektu oraz szczegółowymi kryteriami w `kryteria.md`.
 
-## Cel projektu
+---
 
-To edukacyjna aplikacja webowa napisana w czystym PHP 8.3. Korzysta z lekkiej, samodzielnie zaimplementowanej architektury MVC, bez frameworka PHP. Aplikacja dziala w kontenerach Nginx i PHP-FPM uruchamianych przez Docker Compose.
+## 1. Cel i domena projektu
 
-Aktualnie aplikacja obsluguje:
+**Oficjalny tytuł:** Zarządzanie incydentami wyścigowymi i orzecznictwem sędziowskim FIA w Formule 1  
+**Nazwa systemowa:** ApexSteward (FIA Stewards Hub)  
+**Domena:** Motorsport, obieg spraw dyscyplinarnych sędziów FIA, ewidencja punktów karnych Superlicencji kierowców F1.
 
-- strone glowna pod `/`,
-- liste projektow pod `/projects`,
-- szczegoly projektu pod `/projects/{id}`,
-- odpowiedz 404 dla nieznanych tras.
+Projekt rozwiązuje trzy kluczowe problemy:
+1. **Brak czytelnego rejestru incydentów:** Zastępuje ulotne paski TV i surowe pliki PDF ustandaryzowaną, interaktywną platformą webową.
+2. **Cyfrowy obieg materiału dowodowego:** Zespoły załączają telemetrię i klatki onboardu (pliki graficzne z walidacją MIME/rozmiaru) bezpośrednio do zgłoszeń.
+3. **Automatyczne i atomowe orzecznictwo:** Kary, punkty Superlicencji (wygasające po 365 dniach) i zawieszenia kierowców (limit 12 pkt) rozliczane są transakcyjnie (ACID) oraz cyklicznie przez proces CRON w CLI.
 
-## Stack technologiczny
+> [!IMPORTANT]
+> **Warunek konieczny zaliczenia (K5):** Część backendowa **musi być w 100% obiektowa** (MVC, Service, Repository, DTO/Entity, interfejsy, enkapsulacja, `declare(strict_types=1)`). Kod strukturalny/proceduralny poza punktem wejścia (`public/index.php`) i konfiguracją skutkuje natychmiastową oceną niedostateczną (2.0).
 
-- PHP 8.3 z `declare(strict_types=1)`
-- Composer i autoloading PSR-4
-- Nginx jako serwer HTTP
-- PHP-FPM do wykonywania kodu PHP
-- Docker oraz Docker Compose
-- HTML i CSS bez frameworka frontendowego
+---
 
-## Struktura katalogow
+## 2. Aktorzy i role w systemie (RBAC)
+
+1. **`TEAM_PRINCIPAL` (Szef Zespołu F1, np. Toto Wolff / Mercedes):**
+   - Zgłasza oficjalne protesty incydentów wyścigowych.
+   - Wgrywa materiał dowodowy (telemetria / zrzut ekranu).
+   - Przegląda wyłącznie sprawy dotyczące własnego zespołu (zgłaszający lub oskarżony) oraz tabelę Superlicencji.
+   - Brak uprawnień do zmiany statusów i nakładania kar.
+2. **`FIA_STEWARD` (Sędzia Zawodów FIA):**
+   - Pełny wgląd we wszystkie incydenty w toku.
+   - Zmiana statusu sprawy (`REPORTED` $\to$ `UNDER_INVESTIGATION` $\to$ `NO_FURTHER_ACTION` / `PENALTY_ISSUED`).
+   - Nakładanie oficjalnych sankcji (sekundy kary, punkty Superlicencji) z użyciem katalogu artykułów FIA.
+   - Po orzeczeniu wyzwala automatyczną wysyłkę e-maila (PHPMailer / Mailpit) do ukaranego zespołu.
+   - Brak możliwości składania protestów we własnym imieniu.
+3. **`CRON_SYSTEM` (Autonomiczny proces w tle):**
+   - Skrypt CLI `bin/cron.php expire-penalties`.
+   - Analizuje punkty karne starsze niż 365 dni, oznacza je jako przedawnione (`is_expired = true`), aktualizuje stan zawieszenia kierowców i zapisuje audyt w logu.
+
+---
+
+## 3. Stack technologiczny
+
+- **Backend:** PHP 8.3 (`declare(strict_types=1)`), autoloader PSR-4, czysty OOP MVC bez zewnętrznego frameworka, PDO z PostgreSQL, PHPMailer, PHPUnit.
+- **Baza danych:** PostgreSQL 16 (transakcje ACID, widok `v_super_licence_standings`, klucze obce z ograniczeniami `ON DELETE RESTRICT/CASCADE`, normalizacja 3NF).
+- **Frontend:** Semantyczny HTML5, nowoczesny CSS (Flexbox, Grid, zmienne CSS, dark/light mode bez FOUC), Vanilla JavaScript (moduły ES, Fetch API, asynchroniczna manipulacja DOM).
+- **Infrastruktura:** Docker & Docker Compose (usługi: `server` Nginx, `php` PHP-FPM, `db` PostgreSQL 16, `mailpit` Mailpit, `pgadmin-wdpai`).
+
+---
+
+## 4. Struktura katalogów projektu
 
 ```text
 .
-├── docker/
-│   ├── nginx/                 # obraz i konfiguracja Nginx
-│   └── php/                   # obraz PHP-FPM i rozszerzenia PHP
-├── public/                    # jedyny publicznie dostepny katalog
-│   ├── css/style.css          # globalne style
-│   ├── index.php              # front controller i definicje tras
-│   └── views/                 # szablony HTML renderowane przez kontrolery
-├── src/
-│   ├── controllers/           # kontrolery aplikacji
-│   └── Routing.php            # rejestracja i obsluga tras
-├── composer.json              # konfiguracja autoloadingu
-└── docker-compose.yaml        # uslugi `server` i `php`
+├── bin/                       # Skrypty konsolowe (CRON CLI)
+│   └── cron.php               # Skrypt wygaszania punktów karnych
+├── config/                    # Konfiguracja środowiskowa i słowniki
+│   ├── database.php           # Fabryka połączenia PDO
+│   └── lang/                  # Tłumaczenia i18n (pl.php, en.php)
+├── db/                        # Skrypty bazodanowe
+│   ├── schema.sql             # Schemat tabel, relacji i widoków
+│   └── seed.sql               # Dane demonstracyjne (zespoły, kierowcy, konta)
+├── docs/                      # Dokumentacja projektu i wytyczne
+│   ├── agents/                # Dedykowane wytyczne dla agentów AI
+│   │   ├── backend.md         # Architektura obiektowa, serwisy, repozytoria
+│   │   ├── frontend.md        # HTML5, CSS, JS, dark mode, WCAG
+│   │   ├── database.md        # PostgreSQL, 3NF, transakcje, widoki
+│   │   └── infrastructure.md  # Docker, Nginx, CRON, Mailpit, deploy
+│   └── screenshots/           # Zrzuty ekranów do README (mobile + web)
+├── docker/                    # Konfiguracja kontenerów
+│   ├── db/                    # Dockerfile i skrypty inicjalizacyjne bazy
+│   ├── nginx/                 # Konfiguracja Nginx (reverse proxy, static)
+│   └── php/                   # Obraz PHP 8.3 FPM, rozszerzenia, Composer
+├── public/                    # Jedyny publicznie dostępny katalog (Document Root)
+│   ├── css/                   # Arkusze CSS (system stylów, dark mode)
+│   ├── js/                    # Moduły JavaScript (theme.js, validator.js, api.js)
+│   ├── uploads/               # Bezpieczny katalog na dowody (zablokowany exec PHP)
+│   ├── views/                 # Szablony HTML (layout, partials, podstrony)
+│   └── index.php              # Front Controller aplikacji
+├── src/                       # Kod źródłowy backendu (PSR-4 App\)
+│   ├── Controller/            # Kontrolery HTTP (cienkie, wywołują serwisy)
+│   ├── Service/               # Logika biznesowa i domenowa
+│   ├── Repository/            # Warstwa dostępu do danych (interfejsy i PDO)
+│   ├── Model/                 # Encje domenowe i DTO
+│   ├── Middleware/            # Filtry żądań (AuthMiddleware, RoleMiddleware)
+│   └── Routing.php            # Router dopasowujący wzorce URL i metody HTTP
+├── storage/                   # Logi i pliki tymczasowe
+│   └── logs/                  # cron.log, app.log
+├── tests/                     # Testy automatyczne (PHPUnit)
+│   └── Unit/                  # Testy logiki biznesowej i transakcji
+├── .env.example               # Wzór zmiennych środowiskowych bez sekretów
+├── composer.json              # Autoloading PSR-4 i zależności
+├── docker-compose.yaml        # Definicja usług Docker
+├── kryteria.md                # Tabela 36 kryteriów oceny projektu
+└── README.md                  # Oficjalna dokumentacja projektu
 ```
 
-Nie umieszczaj logiki aplikacji ani danych wrazliwych w `public/`. Ten katalog jest document rootem Nginx i sluzy tylko jako punkt wejscia oraz miejsce na widoki i zasoby publiczne.
+---
 
-## Architektura MVC
+## 5. Dedykowane przewodniki dla agentów (Struktura modułowa)
 
-Projekt stosuje uproszczony przeplyw MVC:
+Ze względu na rozbudowane wymagania techniczne i kryteria oceny, każdy obszar posiada własną instrukcję postępowania. Jako agent **musisz przestrzegać zasad z odpowiedniego pliku:**
 
-```text
-przegladarka
-    -> Nginx
-    -> public/index.php
-    -> Routing
-    -> Controller
-    -> Model / serwis (gdy zostanie dodany)
-    -> View
-    -> odpowiedz HTML
-```
+- **Backend:** przeczytaj [docs/agents/backend.md](file:///c:/Users/dawid/PLIKI/Studia/sem_5/wdpai/wdpai-project/docs/agents/backend.md)  
+  *(Architektura MVC, Controller-Service-Repository, transakcje ACID, walidacja serwerowa, sesja, RBAC, obsługa uploadu, PHPMailer, testy jednostkowe).*
+- **Frontend:** przeczytaj [docs/agents/frontend.md](file:///c:/Users/dawid/PLIKI/Studia/sem_5/wdpai/wdpai-project/docs/agents/frontend.md)  
+  *(Semantyczny HTML5, szablony layout/partials, Design System CSS, Dark/Light mode bez FOUC, Vanilla JS, Fetch API, standard WCAG 2.1 AA, przełącznik i18n).*
+- **Baza Danych:** przeczytaj [docs/agents/database.md](file:///c:/Users/dawid/PLIKI/Studia/sem_5/wdpai/wdpai-project/docs/agents/database.md)  
+  *(Normalizacja 3NF, klucze obce ON DELETE RESTRICT/CASCADE, widok `v_super_licence_standings`, skrypty seed i init.sql, diagram Mermaid ERD).*
+- **Infrastruktura:** przeczytaj [docs/agents/infrastructure.md](file:///c:/Users/dawid/PLIKI/Studia/sem_5/wdpai/wdpai-project/docs/agents/infrastructure.md)  
+  *(Docker Compose, Nginx, PHP-FPM, Mailpit, harmonogram zadań CRON w CLI, zmienne `.env`, procedura uruchomienia na czystym środowisku, Deploy).*
 
-### Front Controller
+---
 
-`public/index.php` jest jedynym punktem wejscia aplikacji. Laduje autoloader Composera, rejestruje trasy, przekazuje metode HTTP i URI do routera oraz uruchamia widok 404, gdy zadna trasa nie pasuje.
+## 6. Złote zasady jakości i bezpieczeństwa (Security Bingo)
 
-Nowe trasy dodawaj w tym pliku w postaci:
+1. **SQL Injection:** Wyłącznie zapytania parametryzowane (`$stmt->prepare()` + `$stmt->execute()`). Zakaz konkatenacji zmiennych do stringów SQL.
+2. **XSS (Cross-Site Scripting):** Każda zmienna renderowana w widokach musi być zabezpieczona:
+   ```php
+   <?= htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8') ?>
+   ```
+3. **CSRF (Cross-Site Request Forgery):** Każdy formularz POST oraz żądanie Fetch POST musi przesyłać token CSRF weryfikowany w sesji.
+4. **Hasła:** Generowane przez `password_hash($pass, PASSWORD_ARGON2ID)` lub `PASSWORD_BCRYPT`. Porównywane wyłącznie przez `password_verify()`.
+5. **Ciasteczka i sesja:** Flagi `HttpOnly`, `SameSite=Lax`, `Secure` (na produkcji), `session_regenerate_id(true)` po zalogowaniu.
+6. **Upload plików:** Walidacja rzeczywistego MIME (`finfo`), ograniczenie do 5 MB, rozszerzenia jpg/jpeg/png, kryptograficznie losowa nazwa pliku (`random_bytes(16)`), zablokowane wykonywanie skryptów PHP w katalogu uploadów.
+7. **Brak logiki w kontrolerach i widokach:** Kontroler tylko deleguje zadania do serwisów; widoki zawierają wyłącznie pętle `foreach` i warunki `if`.
 
-```php
-$routing->get('/example', ExampleController::class, 'index');
-$routing->post('/example', ExampleController::class, 'store');
-```
+---
 
-### Router
+## 7. Procedura weryfikacji zmian przed commitem
 
-`src/Routing.php` laczy metode HTTP i sciezke URL z publiczna metoda kontrolera. Parametry zapisane jako `{name}` sa obecnie dopasowywane tylko do cyfr, konwertowane na `int` i przekazywane do akcji kontrolera przez nazwane argumenty.
-
-Przyklad: `/projects/{id}` wywoluje `ProjectController::show(int $id)`.
-
-Router obsluguje obecnie metody GET i POST. Nie dodawaj logiki biznesowej do routera.
-
-### Controller
-
-Kontrolery znajduja sie w `src/controllers/`, uzywaja przestrzeni nazw `App\Controller` i dziedzicza po `AppController`. Ich zadaniem jest:
-
-- odebranie i walidacja danych wejsciowych,
-- wywolanie modelu lub serwisu,
-- przygotowanie danych dla widoku,
-- wybranie szablonu przez `$this->render()`.
-
-Kontroler powinien byc cienki. Nie umieszczaj w nim rozbudowanych zapytan do bazy, HTML ani stylow.
-
-### Model
-
-Warstwa Model nie jest jeszcze zaimplementowana. Nie udawaj, ze dane widoczne w widokach pochodza z bazy danych. Gdy funkcja wymaga trwalego przechowywania danych, wydziel klasy modelu/repozytorium zamiast dodawac zapytania SQL do kontrolera.
-
-Dla nowych klas zgodnych z mapowaniem `App\` w Composerze preferuj katalogi i nazwy klas o zgodnej wielkosci liter, np.:
-
-```text
-src/Model/Project.php          -> App\Model\Project
-src/Repository/ProjectRepository.php -> App\Repository\ProjectRepository
-```
-
-Po dodaniu lub przeniesieniu klas odswiez autoloader poleceniem `composer dump-autoload`.
-
-### View
-
-Widoki znajduja sie w `public/views/` i maja nazwy `*.html.php`. `AppController::render()` przekazuje do nich dane jako zmienne przy uzyciu `extract(..., EXTR_SKIP)`.
-
-Widoki odpowiadaja za prezentacje. Dozwolone sa w nich proste instrukcje warunkowe i petle, ale nie logika biznesowa, dostep do bazy ani obsluga routingu.
-
-Kazda wartosc pochodzaca od uzytkownika lub z bazy musi byc escapowana w kontekscie HTML:
-
-```php
-<?= htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8') ?>
-```
-
-## Konwencje implementacji
-
-- Zachowuj `declare(strict_types=1)` we wszystkich nowych plikach PHP.
-- Uzywaj deklaracji typow parametrow, zwracanych wartosci i wlasciwosci.
-- Nazwy klas zapisuj w `PascalCase`, a metod i zmiennych w `camelCase`.
-- Nazwy techniczne w kodzie zapisuj po angielsku; tekst interfejsu moze byc po polsku.
-- Jeden kontroler powinien obslugiwac jeden spojny obszar aplikacji.
-- Dane przekazuj do widoku jawnie w tablicy drugiego argumentu `render()`.
-- Nie tworz globalnego stanu i nie uzywaj `$_GET`, `$_POST` ani `$_SERVER` poza warstwa wejscia, jezeli dane mozna przekazac jako argument.
-- Nie dodawaj frameworka ani duzej biblioteki bez wyraznej potrzeby i zgody uzytkownika.
-- Sekrety umieszczaj w `.env`; nigdy nie commituj hasel, tokenow ani danych dostepowych.
-- Nie edytuj `vendor/` recznie.
-- Zachowuj zakres zadania i nie zmieniaj niezwiązanych plikow.
-
-## Dodawanie nowej funkcji
-
-Typowy porzadek prac:
-
-1. Dodaj trase w `public/index.php`.
-2. Dodaj albo rozszerz kontroler w `src/controllers/`.
-3. Dodaj model, repozytorium lub serwis, jesli funkcja zawiera logike biznesowa albo dostep do danych.
-4. Dodaj widok w `public/views/` i przekaz do niego tylko potrzebne dane.
-5. Dodaj lub zmien style w `public/css/style.css`.
-6. Sprawdz poprawna trase, dane wejsciowe, HTML oraz zachowanie dla bledow i 404.
-
-## Uruchamianie projektu
-
-```bash
-docker compose up --build -d
-```
-
-Aplikacja jest domyslnie dostepna pod `http://localhost:8081`. Port mozna zmienic przez zmienna `APP_PORT`.
-
-Przydatne polecenia:
-
-```bash
-docker compose ps
-docker compose logs -f
-docker compose exec php php -l src/Routing.php
-docker compose exec php composer dump-autoload
-docker compose down
-```
-
-Jesli katalog `vendor/` nie istnieje, zainstaluj zaleznosci/autoloader poleceniem:
-
-```bash
-docker compose run --rm php composer install
-```
-
-## Weryfikacja zmian
-
-W projekcie nie ma obecnie skonfigurowanego zestawu testow automatycznych ani narzedzia do formatowania. Po zmianie:
-
-- uruchom `php -l` dla kazdego zmienionego pliku PHP,
-- sprawdz `composer dump-autoload`, jezeli zmieniales klasy lub namespace,
-- uruchom kontenery i sprawdz zmienione endpointy,
-- sprawdz przypadek poprawny, bledne dane oraz nieistniejaca trase,
-- upewnij sie, ze logi `docker compose logs` nie zawieraja nowych bledow,
-- nie twierdz, ze testy przeszly, jezeli ich faktycznie nie uruchomiono.
-
-## Zasady dla agentow AI
-
-- Najpierw przeczytaj pliki bezposrednio zwiazane z zadaniem i potwierdz aktualna implementacje.
-- Przed edycja sprawdz `git status`; zachowaj zmiany uzytkownika i nie cofaj ich.
-- Wprowadzaj najmniejsza spojna zmiane realizujaca wymaganie.
-- Utrzymuj rozdzial odpowiedzialnosci MVC.
-- Nie rozszerzaj zakresu zadania o refaktoryzacje, migracje lub nowe zaleznosci bez uzasadnienia.
-- Jesli wymaganie jest niejednoznaczne, wybierz rozwiazanie zgodne z istniejacymi wzorcami; pytaj tylko wtedy, gdy wybor istotnie zmieni zachowanie aplikacji.
-- Po zakonczeniu opisz zmienione pliki oraz wykonana weryfikacje.
+Przed zaraportowaniem zakończenia zadania lub commitem:
+1. Sprawdź składnię wszystkich zmienionych plików PHP:
+   ```bash
+   docker compose exec php php -l <sciezka_do_pliku>
+   ```
+2. Zaktualizuj autoloader po dodaniu/przeniesieniu klas:
+   ```bash
+   docker compose exec php composer dump-autoload
+   ```
+3. Uruchom testy jednostkowe:
+   ```bash
+   docker compose exec php vendor/bin/phpunit
+   ```
+4. Sprawdź logi kontenerów pod kątem warningów i błędów:
+   ```bash
+   docker compose logs --tail=50 php server db
+   ```
+5. Przeprowadź weryfikację w przeglądarce pod kątem błędów w konsoli (F12) i efektu FOUC.
+6. Sprawdź `git status` — zachowaj tylko celowe zmiany zgodne z konwencją commitów (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`).
