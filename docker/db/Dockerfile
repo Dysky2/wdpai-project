@@ -1,5 +1,5 @@
-FROM postgres:latest
+FROM postgres:16-alpine
 
 ENV POSTGRES_PASSWORD=docker
 ENV POSTGRES_USER=docker
-ENV POSTGRES_DB=db
+ENV POSTGRES_DB=apex_steward
