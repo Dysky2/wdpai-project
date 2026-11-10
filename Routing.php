@@ -2,94 +2,43 @@
 
 declare(strict_types=1);
 
+use App\Http\Request;
+use App\Http\Router;
+
 final class Routing
 {
-    private array $routes = [];
+    private Router $router;
 
-    public function get(string $path, string $controller, string $action): void
+    public function __construct()
     {
-        $this->add('GET', $path, $controller, $action);
+        $this->router = new Router();
     }
 
-    public function post(string $path, string $controller, string $action): void
+    public function get(string $path, string $controller, string $action, array $middlewares = []): void
     {
-        $this->add('POST', $path, $controller, $action);
+        $this->router->get($path, $controller, $action, $middlewares);
     }
 
-    private function add(
-        string $method,
-        string $path,
-        string $controller,
-        string $action,
-    ): void {
-        $this->routes[] = [
-            'method' => $method,
-            'pattern' => $this->createPattern($path),
-            'controller' => $controller,
-            'action' => $action,
-        ];
-    }
-
-	/* 
-	Funkcja dzieli ścieżkę na fragmenty. Zwykłe fragmenty pozostawia bez zmian, 
-	a fragment zapisany w klamrach, na przykład {id}, zamienia na nazwany 
-	parametr przyjmujący cyfry. Następnie ponownie składa ścieżkę w wyrażenie regularne.
-	*/
-    private function createPattern(string $path): string
+    public function post(string $path, string $controller, string $action, array $middlewares = []): void
     {
-        $parts = explode('/', $path);
-
-        foreach ($parts as &$part) {
-            if (str_starts_with($part, '{') && str_ends_with($part, '}')) {
-                $parameterName = trim($part, '{}');
-                $part = '(?P<' . $parameterName . '>\d+)';
-                continue;
-            }
-
-            $part = preg_quote($part, '~');
-        }
-        unset($part);
-
-        return '~^' . implode('/', $parts) . '$~';
+        $this->router->post($path, $controller, $action, $middlewares);
     }
 
     public function dispatch(string $method, string $uri): bool
     {
-        $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $request = Request::fromGlobals();
+        $response = $this->router->dispatch($request);
 
-        foreach ($this->routes as $route) {
-            if ($route['method'] !== $method) {
-                continue;
-            }
-
-            if (!preg_match($route['pattern'], $path, $matches)) {
-                continue;
-            }
-
-            $parameters = array_filter(
-                $matches,
-                static fn (int|string $key): bool => is_string($key),
-                ARRAY_FILTER_USE_KEY,
-            );
-
-            $parameters = array_map(
-                static fn (string $value): int|string =>
-                    ctype_digit($value) ? (int) $value : $value,
-                $parameters,
-            );
-
-            $controllerClass = $route['controller'];
-            $controller = new $controllerClass();
-
-            if (!$controller instanceof AppController) {
-                throw new \RuntimeException('Invalid controller');
-            }
-
-            $controller->{$route['action']}(...$parameters);
-
-            return true;
+        if ($response->getStatusCode() === 404 && $response->getContent() === '404 Not Found') {
+            return false;
         }
 
-        return false;
+        $response->send();
+        return true;
+    }
+
+    public function getRouter(): Router
+    {
+        return $this->router;
     }
 }
