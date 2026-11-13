@@ -15,6 +15,10 @@ final class AuthController extends AbstractController
 {
     public function login(Request $request): Response
     {
+        if ($request->isPost()) {
+            return Response::redirect('/');
+        }
+
         return $this->render('login', [
             'pageTitle'   => 'Logowanie — ApexSteward',
             'activeRoute' => '/login',
@@ -23,6 +27,10 @@ final class AuthController extends AbstractController
 
     public function register(Request $request): Response
     {
+        if ($request->isPost()) {
+            return Response::redirect('/');
+        }
+
         return $this->render('register', [
             'pageTitle'   => 'Rejestracja — ApexSteward',
             'activeRoute' => '/register',

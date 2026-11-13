@@ -25,7 +25,7 @@
                 : (systemPrefersDark ? 'dark' : 'light');
         })();
     </script>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=auth-panel-2">
 </head>
 <body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars((string) $bodyClass, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
     <button

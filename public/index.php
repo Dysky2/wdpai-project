@@ -27,7 +27,9 @@ if (is_file($vendorAutoload)) {
     // PSR-4 namespaced controllers (used when vendor/ autoloader is available)
     $routing->get('/', \App\Controller\HomeController::class, 'index');
     $routing->get('/login', \App\Controller\AuthController::class, 'login');
+    $routing->post('/login', \App\Controller\AuthController::class, 'login');
     $routing->get('/register', \App\Controller\AuthController::class, 'register');
+    $routing->post('/register', \App\Controller\AuthController::class, 'register');
     $routing->get('/profile/{id}', \App\Controller\AuthController::class, 'profile');
 } else {
     // Legacy routes (global-namespace controllers)
