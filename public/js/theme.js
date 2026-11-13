@@ -8,7 +8,7 @@ function getCurrentTheme() {
         ? 'dark'
         : 'light';
 }
-
+ 
 function getSavedTheme() {
     try {
         const theme = localStorage.getItem(storageKey);
