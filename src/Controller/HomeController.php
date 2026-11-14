@@ -38,9 +38,6 @@ final class HomeController extends AbstractController
 
     public function notFound(): Response
     {
-        return $this->render('not-found', [
-            'pageTitle' => 'Nie znaleziono strony',
-            'bodyClass' => 'error-page',
-        ]);
+        return (new ErrorController())->show(404);
     }
 }
