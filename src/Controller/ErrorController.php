@@ -44,8 +44,7 @@ final class ErrorController extends AbstractController
 
         return $this->render('error', [
             'pageTitle' => $page['title'] . ' — ApexSteward',
-            'bodyClass' => 'error-page',
-            'activeRoute' => '',
+            'pageClass' => 'page--centered',
             'status' => $status,
             'title' => $page['title'],
             'description' => $page['description'],

@@ -7,32 +7,13 @@ namespace App\Controller;
 use App\Http\Response;
 
 /**
- * HomeController handles the main dashboard and 404 fallback.
+ * Entry point: sends visitors to the right start page.
+ * Until sessions exist (login card) every visitor is a guest, so this redirects to /login.
  */
 final class HomeController extends AbstractController
 {
     public function index(): Response
     {
-        return $this->render('home', [
-            'pageTitle'   => 'Panel sędziów F1',
-            'bodyClass'   => 'dashboard-page',
-            'activeRoute' => '/',
-            'race'        => [
-                'name'   => 'Grand Prix São Paulo',
-                'round'  => 'Runda 21 / 24',
-                'date'   => '03 LISTOPADA 2026',
-                'status' => 'W toku',
-            ],
-            'stats' => [
-                ['label' => 'Otwarte sprawy',  'value' => '04', 'trend' => '+2 dziś'],
-                ['label' => 'Rozstrzygnięte',  'value' => '18', 'trend' => 'Ten weekend'],
-                ['label' => 'Czas reakcji',    'value' => '08 min', 'trend' => '-12% vs. poprzednio'],
-            ],
-            'judges' => [
-                ['name' => 'Marta Kowalska', 'role' => 'Przewodnicząca panelu', 'status' => 'Aktywna', 'initials' => 'MK'],
-                ['name' => 'James Wilson',   'role' => 'Sędzia FIA',            'status' => 'Aktywny', 'initials' => 'JW'],
-                ['name' => 'Rafael Silva',   'role' => 'Doradca kierowców',     'status' => 'Aktywny', 'initials' => 'RS'],
-            ],
-        ]);
+        return Response::redirect('/login');
     }
 }
