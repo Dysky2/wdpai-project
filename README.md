@@ -118,14 +118,19 @@ Nieobsłużony wyjątek daje **500** (szczegóły trafiają do `error_log`, nie 
 
 ### Zarejestrowane trasy
 
+Trasy są zdefiniowane w `config/routes.php`.
+
 | Metoda | Ścieżka | Kontroler::akcja |
 |---|---|---|
 | GET | `/` | `HomeController::index` |
-| GET | `/login` | `AuthController::login` |
-| GET | `/register` | `AuthController::register` |
-| GET | `/profile/{id}` | `AuthController::profile` |
+| GET, POST | `/login` | `AuthController::login` |
+| GET, POST | `/register` | `AuthController::register` |
 
-Demo błędów: `/profile/abc` i `/profile/0` zwracają 400, a nieistniejąca ścieżka (`/nope`) zwraca 404. W obu przypadkach użytkownik widzi stronę błędu, bez wyjątku PHP.
+Demo błędów: nieistniejąca ścieżka (`/nope`) zwraca 404 ze stroną błędu, bez wyjątku PHP. Walidację `{id}` (400 dla `abc`, `0`, `-1`) router stosuje do każdej trasy z parametrem, np. przyszłej `/incidents/{id}`.
+
+### Wstrzykiwanie zależności (DI)
+
+`public/index.php` tylko ładuje autoloader, buduje kontener (`config/container.php`), pobiera z niego `Router` i rejestruje trasy z `config/routes.php`. `Router` tworzy kontrolery i middleware przez `Container::get()`, który automatycznie wstrzykuje zależności z typów w konstruktorach (autowiring). W kontenerze rejestruje się tylko to, czego nie da się wywnioskować z typów, np. powiązanie interfejsu repozytorium z implementacją PDO.
 
 ---
 
