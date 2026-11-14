@@ -2,20 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Controller\AuthController;
-use App\Controller\HomeController;
 use App\Http\Request;
 use App\Http\Router;
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+$root = dirname(__DIR__);
 
-$router = new Router();
+require_once $root . '/vendor/autoload.php';
 
-$router->get('/', HomeController::class, 'index');
-$router->get('/login', AuthController::class, 'login');
-$router->post('/login', AuthController::class, 'login');
-$router->get('/register', AuthController::class, 'register');
-$router->post('/register', AuthController::class, 'register');
-$router->get('/profile/{id}', AuthController::class, 'profile');
+$container = require $root . '/config/container.php';
+$router = $container->get(Router::class);
+(require $root . '/config/routes.php')($router);
 
 $router->dispatch(Request::fromGlobals())->send();
