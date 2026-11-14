@@ -5,38 +5,17 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Model\Incident;
+use App\Model\IncidentStatus;
 
-/**
- * Contract for incident data persistence operations.
- */
 interface IncidentRepositoryInterface
 {
-    /**
-     * Find an incident by its primary key.
-     */
     public function findById(int $id): ?Incident;
 
-    /**
-     * Return all incidents, optionally filtered by status.
-     *
-     * @return Incident[]
-     */
-    public function findAll(?string $status = null): array;
+    /** SELECT ... FOR UPDATE (call inside a transaction before changing the status). */
+    public function findByIdForUpdate(int $id): ?Incident;
 
-    /**
-     * Return incidents filed by or against a specific team.
-     *
-     * @return Incident[]
-     */
-    public function findByTeamId(int $teamId): array;
-
-    /**
-     * Persist a new incident and return the entity with the generated id.
-     */
+    /** Inserts the incident and returns it with the generated id. */
     public function save(Incident $incident): Incident;
 
-    /**
-     * Update the status of an existing incident.
-     */
-    public function updateStatus(int $id, string $status): void;
+    public function updateStatus(int $id, IncidentStatus $status): void;
 }

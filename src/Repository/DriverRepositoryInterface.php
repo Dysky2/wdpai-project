@@ -6,32 +6,18 @@ namespace App\Repository;
 
 use App\Model\Driver;
 
-/**
- * Contract for driver data persistence operations.
- */
 interface DriverRepositoryInterface
 {
-    /**
-     * Find a driver by their primary key.
-     */
     public function findById(int $id): ?Driver;
 
-    /**
-     * Return all drivers, ordered by driver number.
-     *
-     * @return Driver[]
-     */
+    /** @return list<Driver> ordered by race number */
     public function findAll(): array;
 
-    /**
-     * Return all drivers belonging to a specific team.
-     *
-     * @return Driver[]
-     */
+    /** @return list<Driver> */
     public function findByTeamId(int $teamId): array;
 
-    /**
-     * Update the suspension flag for a driver.
-     */
+    /** SELECT ... FOR UPDATE: serialises concurrent rulings for the same driver (call inside a transaction). */
+    public function lockById(int $id): ?Driver;
+
     public function updateSuspension(int $id, bool $isSuspended): void;
 }
