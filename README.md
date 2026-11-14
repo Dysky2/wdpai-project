@@ -134,6 +134,24 @@ Demo błędów: nieistniejąca ścieżka (`/nope`) zwraca 404 ze stroną błędu
 
 ---
 
+## Layout i design system
+
+Wszystkie widoki są renderowane wewnątrz `public/views/layout.html.php` (przez `AbstractController::render()`), który składa stronę z partiali, więc nagłówek i stopka istnieją w jednym miejscu:
+
+| Partial (`public/views/partials/`) | Zawartość |
+|---|---|
+| `header.html.php` | znak „F1 STEWARDS”, górna nawigacja, chip użytkownika, wylogowanie, przełącznik motywu |
+| `tabbar.html.php` | dolny pasek zakładek na telefonie (te same linki co nagłówek) |
+| `flash.html.php` | komunikaty (`role="alert"` dla błędów, `role="status"` dla reszty) |
+| `footer.html.php` | stopka „ApexSteward · FIA Stewards Hub” |
+| `form-field.html.php` | pole formularza z `<label for>`, podpowiedzią i błędem (`aria-describedby`, `aria-invalid`) |
+
+Nawigację i dane użytkownika widok dostaje jako zmienne `$navItems` i `$currentUser` (ustawi je warstwa uwierzytelniania); dla gościa pasek nawigacji się nie wyświetla.
+
+Styl (`public/css/style.css`, bez stylów inline) opiera się na zmiennych CSS: kolory, statusy spraw (`--st-*`), typografia, promień i odstępy. Motyw jasny jest w `:root`, ciemny w `[data-theme="dark"]`; blokujący skrypt w `<head>` ustawia `data-theme` przed pierwszym renderem (brak FOUC). Komponenty: `.button`, `.card`, `.badge--*`, `.table`, `.form-field`, `.alert`. Układ jest responsywny: pasek górny od 768 px, dolny pasek zakładek poniżej.
+
+---
+
 ## Szybki start (Czyste środowisko)
 
 ```bash

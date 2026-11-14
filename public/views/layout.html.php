@@ -1,3 +1,7 @@
+<?php
+$navItems ??= [];
+$bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : ''));
+?>
 <!doctype html>
 <html lang="pl">
 <head>
@@ -25,20 +29,21 @@
                 : (systemPrefersDark ? 'dark' : 'light');
         })();
     </script>
-    <link rel="stylesheet" href="/css/style.css?v=auth-panel-2">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
-<body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars((string) $bodyClass, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
-    <button
-        class="theme-toggle"
-        type="button"
-        aria-label="Włącz ciemny motyw"
-        aria-pressed="false"
-        title="Zmień motyw"
-    >
-        <i aria-hidden="true">☾</i>
-    </button>
+<body<?= $bodyClasses !== '' ? ' class="' . htmlspecialchars($bodyClasses, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
+    <a class="skip-link" href="#main">Przejdź do treści</a>
 
-    <?= $content ?>
+    <?php require __DIR__ . '/partials/header.html.php'; ?>
+    <?php require __DIR__ . '/partials/flash.html.php'; ?>
+
+    <main class="page<?= !empty($pageClass) ? ' ' . htmlspecialchars((string) $pageClass, ENT_QUOTES, 'UTF-8') : '' ?>" id="main">
+        <?= $content ?>
+    </main>
+
+    <?php require __DIR__ . '/partials/footer.html.php'; ?>
+    <?php require __DIR__ . '/partials/tabbar.html.php'; ?>
+
     <script src="/js/theme.js" defer></script>
 </body>
 </html>

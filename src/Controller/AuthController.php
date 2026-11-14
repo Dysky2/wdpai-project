@@ -21,7 +21,7 @@ final class AuthController extends AbstractController
 
         return $this->render('login', [
             'pageTitle'   => 'Logowanie — ApexSteward',
-            'activeRoute' => '/login',
+            'pageClass'   => 'page--centered',
         ]);
     }
 
@@ -33,7 +33,7 @@ final class AuthController extends AbstractController
 
         return $this->render('register', [
             'pageTitle'   => 'Rejestracja — ApexSteward',
-            'activeRoute' => '/register',
+            'pageClass'   => 'page--centered',
         ]);
     }
 }
