@@ -15,3 +15,5 @@ docs/
 !/public/uploads/.gitkeep
 /storage/logs/*
 !/storage/logs/.gitkeep
+CLAUDE.md
+.claude/

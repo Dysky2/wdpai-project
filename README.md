@@ -143,6 +143,8 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
+Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje `composer install` przy buildzie, a entrypoint (`docker/php/docker-entrypoint.sh`) powtarza to przy starcie kontenera, gdy brakuje `vendor/autoload.php` lub zmienił się `composer.lock` (bind mount `.:/app` przykrywa katalog z obrazu). Ręczna instalacja nie jest potrzebna.
+
 ### Dostęp do usług:
 - **Aplikacja webowa:** [http://localhost:8080](http://localhost:8080)
 - **Skrzynka pocztowa (Mailpit):** [http://localhost:8025](http://localhost:8025)
