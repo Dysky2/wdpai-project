@@ -44,27 +44,23 @@
                             <p class="eyebrow">PRIORYTETOWE ZGŁOSZENIA</p>
                             <h2 id="cases-heading">Sprawy do rozpatrzenia</h2>
                         </div>
-                        <a class="text-link" href="/projects">Zobacz wszystkie <span aria-hidden="true">→</span></a>
                     </div>
                     <div class="case-list">
-                        <a class="case-row" href="/projects/1">
+                        <div class="case-row">
                             <span class="case-number">01</span>
                             <span class="case-info"><strong>Incydent na torze</strong><small>Verstappen / Norris · Zakręt 4</small></span>
                             <span class="priority priority--high">Wysoki</span>
-                            <span class="case-arrow" aria-hidden="true">→</span>
-                        </a>
-                        <a class="case-row" href="/projects/2">
+                        </div>
+                        <div class="case-row">
                             <span class="case-number">02</span>
                             <span class="case-info"><strong>Przekroczenie limitów toru</strong><small>Leclerc · Okrążenie 38</small></span>
                             <span class="priority priority--medium">Średni</span>
-                            <span class="case-arrow" aria-hidden="true">→</span>
-                        </a>
-                        <a class="case-row" href="/projects/3">
+                        </div>
+                        <div class="case-row">
                             <span class="case-number">03</span>
                             <span class="case-info"><strong>Niebezpieczne wypuszczenie</strong><small>Box Ferrari · Pit lane</small></span>
                             <span class="priority priority--low">Niski</span>
-                            <span class="case-arrow" aria-hidden="true">→</span>
-                        </a>
+                        </div>
                     </div>
                 </section>
 
@@ -85,7 +81,6 @@
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <a class="outline-button" href="/about">Zarządzaj zespołem <span aria-hidden="true">↗</span></a>
                 </section>
             </div>
     </main>
