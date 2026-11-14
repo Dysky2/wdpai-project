@@ -2,6 +2,12 @@
 -- Widok v_super_licence_standings i trigger set_updated_at: karta S1-08.
 -- Ladowane przez Docker (docker-entrypoint-initdb.d) tylko na pustym wolumenie.
 
+-- Akcje na kluczach obcych (K26); ON UPDATE zostaje domyslne NO ACTION, bo klucze IDENTITY sa niezmienne.
+--   RESTRICT: users/drivers -> teams (nie usuwa sie zespolu z kierowcami i kontami),
+--             incidents -> grands_prix, users, drivers, infringement_articles (zgloszenie to dokument),
+--             penalties -> incidents, drivers, users, infringement_articles (orzeczenie FIA chroni historie kar).
+--   CASCADE:  incident_evidence -> incidents (dowod nie istnieje bez sprawy; plik z dysku usuwa serwis).
+
 CREATE TABLE teams (
     id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name            VARCHAR(100) NOT NULL UNIQUE,
