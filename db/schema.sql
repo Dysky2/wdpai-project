@@ -1,5 +1,5 @@
 -- ApexSteward (FIA Stewards Hub) - schemat PostgreSQL 16 (8 tabel, 3NF)
--- Widok v_super_licence_standings i trigger set_updated_at: karta S1-08.
+-- Widok v_super_licence_standings i trigger set_updated_at: na koncu pliku.
 -- Ladowane przez Docker (docker-entrypoint-initdb.d) tylko na pustym wolumenie.
 
 -- Akcje na kluczach obcych (K26); ON UPDATE zostaje domyslne NO ACTION, bo klucze IDENTITY sa niezmienne.
@@ -124,3 +124,27 @@ CREATE INDEX idx_incidents_reporter      ON incidents (reporting_user_id);
 CREATE INDEX idx_incident_evidence_inc   ON incident_evidence (incident_id);
 CREATE INDEX idx_penalties_active_driver ON penalties (driver_id)  WHERE NOT is_expired;
 CREATE INDEX idx_penalties_active_expiry ON penalties (expires_at) WHERE NOT is_expired;
+
+-- Trigger: automatyczna aktualizacja incidents.updated_at
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$
+BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_incidents_updated_at
+BEFORE UPDATE ON incidents
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Widok: aktywne punkty Superlicencji (kara aktywna = NOT is_expired AND expires_at > now(),
+-- wiec wynik jest poprawny rowniez miedzy przebiegami CRON). Status licencji liczy PHP (LicenceStatus).
+CREATE OR REPLACE VIEW v_super_licence_standings AS
+SELECT d.id AS driver_id, d.code, d.first_name, d.last_name, d.race_number,
+       t.id AS team_id, t.name AS team_name, d.is_suspended,
+       COALESCE(SUM(p.points_added) FILTER (WHERE NOT p.is_expired AND p.expires_at > now()), 0)::INT AS active_points,
+       MIN(p.expires_at) FILTER (WHERE NOT p.is_expired AND p.expires_at > now() AND p.points_added > 0) AS next_expiration
+FROM drivers d
+JOIN teams t ON t.id = d.team_id
+LEFT JOIN penalties p ON p.driver_id = d.id
+GROUP BY d.id, t.id;
