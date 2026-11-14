@@ -161,6 +161,129 @@ Styl (`public/css/style.css`, bez stylów inline) opiera się na zmiennych CSS: 
 
 ---
 
+## Baza danych
+
+PostgreSQL 16, 8 tabel w 3NF. Schemat (`db/schema.sql`: tabele, ograniczenia, indeksy, widok `v_super_licence_standings`, trigger `set_updated_at`) i dane demo (`db/seed.sql`) ładują się automatycznie przy pierwszym starcie na pustym wolumenie, w tej kolejności. Pełny reset: `docker compose down -v && docker compose up -d`.
+
+**Eksport .sql** (schemat + dane aktualnej bazy): `docker compose exec db pg_dump -U docker apex_steward > export.sql`. Pliki `db/schema.sql` i `db/seed.sql` są gotowym eksportem startowym.
+
+**Dane demo:** 10 zespołów, 20 kierowców sezonu 2024, 3 Grand Prix (aktywne: 2024 Monaco), 7 artykułów regulaminu, 27 spraw (12 z Monaco: 3 zgłoszone, 2 w dochodzeniu, 3 z karą, 4 bez dalszych działań; reszta to wcześniejsze rundy będące źródłem punktów Superlicencji) i 18 kar. Daty kar są liczone względem `now()`.
+
+| Konto | Rola | Zespół | Hasło |
+|---|---|---|---|
+| `toto@mercedes.f1` | `TEAM_PRINCIPAL` | Mercedes | `demo123` |
+| `steward@fia.org` | `FIA_STEWARD` | - | `demo123` |
+| `principal@<zespół>.f1` (redbull, ferrari, mclaren, astonmartin, alpine, williams, rb, sauber, haas) | `TEAM_PRINCIPAL` | odpowiedni zespół | `demo123` |
+
+Hasła w bazie to hashe Argon2id; jawne hasło demo występuje wyłącznie tutaj.
+
+### ERD
+
+```mermaid
+erDiagram
+    TEAMS |o--o{ USERS : employs
+    TEAMS ||--o{ DRIVERS : fields
+    GRANDS_PRIX ||--o{ INCIDENTS : hosts
+    USERS ||--o{ INCIDENTS : reports
+    DRIVERS ||--o{ INCIDENTS : accused_in
+    DRIVERS |o--o{ INCIDENTS : affected_in
+    INFRINGEMENT_ARTICLES ||--o{ INCIDENTS : alleged_under
+    INCIDENTS ||--o{ INCIDENT_EVIDENCE : has
+    INCIDENTS ||--o{ PENALTIES : results_in
+    DRIVERS ||--o{ PENALTIES : receives
+    USERS ||--o{ PENALTIES : issues
+    INFRINGEMENT_ARTICLES ||--o{ PENALTIES : basis_for
+
+    TEAMS {
+        int id PK
+        string name UK
+        string license_country
+        timestamptz created_at
+    }
+    USERS {
+        int id PK
+        string email UK
+        string password_hash
+        string role
+        int team_id FK
+        string first_name
+        string last_name
+        timestamptz created_at
+    }
+    DRIVERS {
+        int id PK
+        int team_id FK
+        string first_name
+        string last_name
+        string code UK
+        int race_number UK
+        boolean is_suspended
+        timestamptz created_at
+    }
+    GRANDS_PRIX {
+        int id PK
+        string name
+        string circuit_name
+        string country
+        int season_year
+        int round_number
+        date race_date
+        int total_laps
+        boolean is_active
+    }
+    INFRINGEMENT_ARTICLES {
+        int id PK
+        string code UK
+        string title
+        string reference
+        string default_penalty_type
+        int default_sanction_value
+        int default_points
+        text precedent_wording
+    }
+    INCIDENTS {
+        int id PK
+        int grand_prix_id FK
+        int reporting_user_id FK
+        int accused_driver_id FK
+        int affected_driver_id FK
+        int infringement_article_id FK
+        int lap_number
+        text description
+        string status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    INCIDENT_EVIDENCE {
+        int id PK
+        int incident_id FK
+        string file_path UK
+        string original_name
+        string mime_type
+        int size_bytes
+        string sha256
+        timestamptz uploaded_at
+    }
+    PENALTIES {
+        int id PK
+        int incident_id FK
+        int driver_id FK
+        int steward_id FK
+        int article_id FK
+        string penalty_type
+        int sanction_value
+        int points_added
+        text reason
+        timestamptz issued_at
+        timestamptz expires_at
+        boolean is_expired
+    }
+```
+
+Akcje na kluczach obcych: `RESTRICT` wszędzie (zgłoszenia i orzeczenia to dokumenty), poza `incident_evidence.incident_id` → `CASCADE` (dowód nie istnieje bez sprawy).
+
+---
+
 ## Szybki start (Czyste środowisko)
 
 ```bash
