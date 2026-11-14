@@ -178,9 +178,8 @@ final class Router
 
     private function resolve(string $class): object
     {
-        return $this->container !== null && $this->container->has($class)
-            ? $this->container->get($class)
-            : new $class();
+        // Container autowires classes that were not registered explicitly.
+        return $this->container?->get($class) ?? new $class();
     }
 
     private function errorResponse(Request $request, int $status, string $code, string $message): Response
