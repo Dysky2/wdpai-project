@@ -17,12 +17,6 @@ $activeRoute ??= '/';
         <a class="nav-link<?= $activeRoute === '/' ? ' nav-link--active' : '' ?>" href="/"<?= $activeRoute === '/' ? ' aria-current="page"' : '' ?>>
             <span aria-hidden="true">▦</span> Dashboard
         </a>
-        <a class="nav-link<?= $activeRoute === '/projects' ? ' nav-link--active' : '' ?>" href="/projects"<?= $activeRoute === '/projects' ? ' aria-current="page"' : '' ?>>
-            <span aria-hidden="true">◈</span> Sprawy
-        </a>
-        <a class="nav-link<?= $activeRoute === '/about' ? ' nav-link--active' : '' ?>" href="/about"<?= $activeRoute === '/about' ? ' aria-current="page"' : '' ?>>
-            <span aria-hidden="true">ⓘ</span> O panelu
-        </a>
     </nav>
 
     <div class="sidebar-footer">
