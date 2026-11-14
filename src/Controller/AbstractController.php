@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Http\JsonResponse;
+use App\Http\Request;
 use App\Http\Response;
 
 abstract class AbstractController
@@ -50,6 +51,14 @@ abstract class AbstractController
         $html = ob_get_clean();
 
         return new Response((string) $html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+    }
+
+    /** Reads a query-string value as a string (arrays and missing keys give $default). */
+    protected function queryString(Request $request, string $key, string $default = ''): string
+    {
+        $value = $request->getQuery($key, $default);
+
+        return is_string($value) ? $value : $default;
     }
 
     /**
