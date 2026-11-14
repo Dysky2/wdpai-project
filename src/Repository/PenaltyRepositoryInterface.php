@@ -6,44 +6,26 @@ namespace App\Repository;
 
 use App\Model\Penalty;
 
-/**
- * Contract for penalty (sanction) data persistence operations.
- */
 interface PenaltyRepositoryInterface
 {
-    /**
-     * Find a penalty by its primary key.
-     */
     public function findById(int $id): ?Penalty;
 
-    /**
-     * Return all penalties for a specific incident.
-     *
-     * @return Penalty[]
-     */
+    /** @return list<Penalty> */
     public function findByIncidentId(int $incidentId): array;
 
-    /**
-     * Return all active (non-expired) penalties for a driver.
-     *
-     * @return Penalty[]
-     */
+    /** Penalties that still count: NOT is_expired AND expires_at > now. @return list<Penalty> */
     public function findActiveByDriverId(int $driverId): array;
 
-    /**
-     * Return all penalties older than 365 days that are not yet marked as expired.
-     *
-     * @return Penalty[]
-     */
-    public function findExpiredCandidates(): array;
+    /** Sum of points of the active penalties of a driver (same rule as the standings view). */
+    public function sumActivePoints(int $driverId): int;
 
-    /**
-     * Persist a new penalty and return the entity with the generated id.
-     */
+    /** Inserts the penalty and returns it with the generated id. */
     public function save(Penalty $penalty): Penalty;
 
     /**
-     * Mark a penalty as expired (is_expired = true).
+     * Flags every not yet expired penalty whose expires_at <= $now (UPDATE ... RETURNING), used by the CRON job.
+     *
+     * @return list<array{driverId: int, points: int}> one entry per expired penalty
      */
-    public function markExpired(int $id): void;
+    public function expireOutdated(\DateTimeImmutable $now): array;
 }
