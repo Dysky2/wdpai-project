@@ -30,6 +30,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
         })();
     </script>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/screens.css">
 </head>
 <body<?= $bodyClasses !== '' ? ' class="' . htmlspecialchars($bodyClasses, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
     <a class="skip-link" href="#main">Przejdź do treści</a>

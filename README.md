@@ -125,8 +125,17 @@ Trasy są zdefiniowane w `config/routes.php`.
 | GET | `/` | `HomeController::index` |
 | GET, POST | `/login` | `AuthController::login` |
 | GET, POST | `/register` | `AuthController::register` |
+| POST | `/logout` | `AuthController::logout` |
+| GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
+| GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` |
+| GET | `/incidents/{id}` | `IncidentController::show` |
+| GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` |
+| GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
 
-Demo błędów: nieistniejąca ścieżka (`/nope`) zwraca 404 ze stroną błędu, bez wyjątku PHP. Walidację `{id}` (400 dla `abc`, `0`, `-1`) router stosuje do każdej trasy z parametrem, np. przyszłej `/incidents/{id}`.
+Demo błędów: `/incidents/abc` i `/incidents/0` zwracają 400, `/incidents/999` oraz nieistniejąca ścieżka (`/nope`) zwracają 404, wszystko ze stroną błędu i bez wyjątku PHP.
+
+> [!NOTE]
+> **Tryb demonstracyjny (tylko wygląd).** Do czasu zaimplementowania bazy, serwisów i uwierzytelniania formularze logowania i rejestracji niczego nie sprawdzają: wysłanie dowolnych danych przekierowuje do dziennika incydentów. Ekrany (dziennik incydentów, akta sprawy, orzeczenie, nowy protest, klasyfikacja Superlicencji) pokazują dane przykładowe z prototypów z `src/Demo/DemoData.php`, wstrzykiwane do kontrolerów przez DI. Klasa zostanie zastąpiona serwisami i repozytoriami, a przyciski akcji (zmiana statusu, zapis kary, wysłanie protestu) niczego jeszcze nie zapisują.
 
 ### Wstrzykiwanie zależności (DI)
 
