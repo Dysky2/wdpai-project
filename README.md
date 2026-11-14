@@ -94,6 +94,41 @@ flowchart TD
 
 ---
 
+## Routing
+
+`App\Http\Router` dopasowuje metodę HTTP (GET/POST) oraz wzorzec ścieżki. Query string nie wchodzi do wzorca, odczytuje się go przez `Request::getQuery()`.
+
+| Rodzaj trasy | Zapis | Zachowanie |
+|---|---|---|
+| Statyczna | `/login`, `/incidents` | dopasowanie dosłowne |
+| Parametr ścieżki | `/incidents/{id}` | `{id}` musi być liczbą całkowitą > 0, w przeciwnym razie **400** |
+| Regex | `/lang/(pl\|en)` | segment w nawiasach jest użyty jako wyrażenie regularne, brak dopasowania daje **404** |
+| Query | `/incidents?status=REPORTED&gp=3` | `$request->getQuery('status')` |
+
+Trasy z parametrem rejestruj po trasach statycznych o tym samym prefiksie (np. `/incidents/create` przed `/incidents/{id}`), bo router wybiera pierwszą pasującą.
+
+### Obsługa błędów
+
+Kontroler lub middleware może rzucić `App\Exception\HttpException` (`BadRequestException` 400, `UnauthorizedException` 401, `ForbiddenException` 403, `NotFoundException` 404, `UnprocessableEntityException` 422). Router zamienia go na odpowiedź:
+
+- strony HTML: widok `error.html.php` w standardowym layoucie (`ErrorController`),
+- ścieżki `/api/*`: JSON `{ "error": { "code": "not_found", "message": "…" } }`.
+
+Nieobsłużony wyjątek daje **500** (szczegóły trafiają do `error_log`, nie do odpowiedzi).
+
+### Zarejestrowane trasy
+
+| Metoda | Ścieżka | Kontroler::akcja |
+|---|---|---|
+| GET | `/` | `HomeController::index` |
+| GET | `/login` | `AuthController::login` |
+| GET | `/register` | `AuthController::register` |
+| GET | `/profile/{id}` | `AuthController::profile` |
+
+Demo błędów: `/profile/abc` i `/profile/0` zwracają 400, a nieistniejąca ścieżka (`/nope`) zwraca 404. W obu przypadkach użytkownik widzi stronę błędu, bez wyjątku PHP.
+
+---
+
 ## Szybki start (Czyste środowisko)
 
 ```bash
