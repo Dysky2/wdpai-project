@@ -35,9 +35,4 @@ final class HomeController extends AbstractController
             ],
         ]);
     }
-
-    public function notFound(): Response
-    {
-        return (new ErrorController())->show(404);
-    }
 }

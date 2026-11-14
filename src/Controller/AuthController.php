@@ -49,7 +49,7 @@ final class AuthController extends AbstractController
         $email = 'jan.kowalski@example.com';
         $role  = 'TEAM_PRINCIPAL';
 
-        return $this->render('profil', [
+        return $this->render('profile', [
             'pageTitle'    => 'Profil użytkownika — ApexSteward',
             'activeRoute'  => '/profile/' . $id,
             'profilId'     => $id,
