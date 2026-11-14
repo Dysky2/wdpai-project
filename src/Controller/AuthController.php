@@ -9,7 +9,7 @@ use App\Http\Response;
 
 /**
  * AuthController handles authentication-related pages:
- * login, registration and user profile.
+ * login and registration.
  */
 final class AuthController extends AbstractController
 {
@@ -34,28 +34,6 @@ final class AuthController extends AbstractController
         return $this->render('register', [
             'pageTitle'   => 'Rejestracja — ApexSteward',
             'activeRoute' => '/register',
-        ]);
-    }
-
-    /**
-     * User profile page. Accepts the user id as a path parameter.
-     *
-     * @param int $id User identifier extracted from the URL
-     */
-    public function profile(Request $request, int $id): Response
-    {
-        // Placeholder data — will be replaced by UserService in a later card
-        $name  = 'jan_kowalski';
-        $email = 'jan.kowalski@example.com';
-        $role  = 'TEAM_PRINCIPAL';
-
-        return $this->render('profile', [
-            'pageTitle'    => 'Profil użytkownika — ApexSteward',
-            'activeRoute'  => '/profile/' . $id,
-            'profilId'     => $id,
-            'profilName'   => $name,
-            'profilEmail'  => $email,
-            'profilRole'   => $role,
         ]);
     }
 }
