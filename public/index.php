@@ -11,6 +11,6 @@ require_once $root . '/vendor/autoload.php';
 
 $container = require $root . '/config/container.php';
 $router = $container->get(Router::class);
-(require $root . '/config/routes.php')($router);
+(require $root . '/config/routes.php')($router, $container);
 
 $router->dispatch(Request::fromGlobals())->send();
