@@ -127,7 +127,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | POST | `/logout` | `AuthController::logout` |
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
 | GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` |
-| GET | `/incidents/{id}` | `IncidentController::show` |
+| GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
 | GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
 

@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Demo\DemoData;
-use App\Exception\NotFoundException;
 use App\Http\Request;
 use App\Http\Response;
 use App\Exception\UnauthorizedException;
 use App\Service\AuthService;
 use App\Model\IncidentCriteria;
-use App\Service\IncidentAccessService;
 use App\Service\IncidentService;
 use App\Service\ShellService;
 use App\View\ViewHelper;
@@ -23,7 +21,6 @@ final class IncidentController extends AbstractController
         private readonly ShellService $shell,
         private readonly DemoData $demo,
         private readonly AuthService $auth,
-        private readonly IncidentAccessService $access,
         private readonly IncidentService $incidentService,
     ) {
         parent::__construct($view);
@@ -60,13 +57,12 @@ final class IncidentController extends AbstractController
     {
         // 404 for a missing case, 403 for another team's case (ownership is checked on the server).
         $user = $this->auth->currentUser() ?? throw new UnauthorizedException();
-        $this->access->getForUser($user, $id);
-
-        $incident = $this->demo->incident($id) ?? throw new NotFoundException('Incident not found');
+        $incident = $this->incidentService->dossier($this->incidentService->getForUser($user, $id));
 
         return $this->render('incidents/show', $this->shell->build('/incidents') + [
             'pageTitle' => $incident['code'] . ' — ApexSteward',
             'incident' => $incident,
+            'isSteward' => $user->isSteward(),
         ]);
     }
 

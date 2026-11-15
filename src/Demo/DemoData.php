@@ -86,7 +86,7 @@ final class DemoData
     }
 
     /** @return array<string, mixed>|null */
-    public function incident(int $id): ?array
+    private function incident(int $id): ?array
     {
         if (!isset(self::INCIDENTS[$id])) {
             return null;

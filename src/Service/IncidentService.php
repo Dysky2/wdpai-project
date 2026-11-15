@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Exception\ForbiddenException;
+use App\Exception\NotFoundException;
 use App\Model\IncidentCriteria;
+use App\Model\IncidentDetail;
 use App\Model\IncidentStatus;
 use App\Model\IncidentSummary;
 use App\Model\PenaltyType;
 use App\Model\User;
 use App\Repository\GrandPrixRepositoryInterface;
+use App\Repository\IncidentDetailRepositoryInterface;
 use App\Repository\IncidentListRepositoryInterface;
 
 /**
@@ -35,7 +39,74 @@ final class IncidentService
     public function __construct(
         private readonly IncidentListRepositoryInterface $incidents,
         private readonly GrandPrixRepositoryInterface $grandsPrix,
+        private readonly IncidentDetailRepositoryInterface $details,
     ) {
+    }
+
+    /**
+     * Case file for the case page.
+     *
+     * @throws NotFoundException  when the case does not exist
+     * @throws ForbiddenException when a team principal opens a case of another team
+     */
+    public function getForUser(User $user, int $id): IncidentDetail
+    {
+        $detail = $this->details->findById($id) ?? throw new NotFoundException('Incident not found');
+
+        if (!$user->isSteward() && !$detail->belongsToTeam($user->getTeamId() ?? 0)) {
+            throw new ForbiddenException('This case belongs to another team');
+        }
+
+        return $detail;
+    }
+
+    /**
+     * View data for the case page (formatting only, no markup).
+     *
+     * @return array<string, mixed>
+     */
+    public function dossier(IncidentDetail $detail): array
+    {
+        $evidence = $detail->getEvidence();
+        $penalty = $detail->getPenalty();
+
+        return [
+            'id' => $detail->getId(),
+            'code' => $detail->getCode(),
+            'title' => $detail->getArticleTitle(),
+            'article' => $detail->getArticleReference(),
+            'description' => $detail->getDescription(),
+            'grandPrix' => $detail->getGrandPrixName(),
+            'circuit' => $detail->getCircuitName(),
+            'lap' => $detail->getLapNumber(),
+            'totalLaps' => $detail->getTotalLaps(),
+            'accused' => $detail->getAccused(),
+            'affected' => $detail->getAffected(),
+            'status' => $detail->getStatus()->value,
+            'statusLabel' => self::STATUS_LABELS[$detail->getStatus()->value],
+            'reportedAt' => $detail->getReportedAt()->setTimezone(new \DateTimeZone('UTC'))->format('d.m.Y, H:i') . ' UTC',
+            'reporter' => $detail->getReporterName(),
+            'reporterTeam' => $detail->getReporterTeam(),
+            'evidence' => $evidence === null ? null : [
+                'url' => $evidence->getFilePath(),
+                'name' => $evidence->getOriginalName(),
+                'size' => $this->formatSize($evidence->getSizeBytes()),
+                'sha256' => $evidence->getSha256(),
+            ],
+            'penalty' => $penalty === null ? null : [
+                'label' => $this->penaltyLabel($penalty['type'], $penalty['value']),
+                'points' => $penalty['points'],
+                'article' => $penalty['articleReference'],
+                'reason' => $penalty['reason'],
+            ],
+        ];
+    }
+
+    private function formatSize(int $bytes): string
+    {
+        return $bytes >= 1048576
+            ? number_format($bytes / 1048576, 1, ',', '') . ' MB'
+            : number_format(max(1, (int) round($bytes / 1024)), 0, ',', '') . ' KB';
     }
 
     /**
