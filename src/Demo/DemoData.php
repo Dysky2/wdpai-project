@@ -14,7 +14,6 @@ use App\Model\LicenceStatus;
  */
 final class DemoData
 {
-    public const PER_PAGE = 6;
     public const STANDINGS_PER_PAGE = 10;
     public const TOTAL_LAPS = 78;
 
@@ -73,17 +72,6 @@ final class DemoData
         31 => [9, ['RIC', 'SAR'], 'Kontakt kół w zakręcie 6', 'Typowy incydent wyścigowy, brak winnego', 'NO_FURTHER_ACTION', null],
     ];
 
-    /** @return list<array<string, mixed>> */
-    public function incidents(): array
-    {
-        $rows = [];
-        foreach (self::INCIDENTS as $id => $incident) {
-            $rows[] = $this->incidentRow($id, $incident);
-        }
-
-        return $rows;
-    }
-
     /** @return array<string, int> */
     public function incidentCounts(): array
     {
@@ -95,28 +83,6 @@ final class DemoData
         $counts['CLOSED'] = $counts['PENALTY_ISSUED'] + $counts['NO_FURTHER_ACTION'];
 
         return $counts;
-    }
-
-    /**
-     * @return array{rows: list<array<string, mixed>>, total: int, page: int, pages: int}
-     */
-    public function filterIncidents(string $filter, string $query, int $page): array
-    {
-        $rows = array_values(array_filter(
-            $this->incidents(),
-            function (array $row) use ($filter, $query): bool {
-                $inFilter = match ($filter) {
-                    'reported' => $row['status'] === 'REPORTED',
-                    'investigation' => $row['status'] === 'UNDER_INVESTIGATION',
-                    'closed' => in_array($row['status'], ['PENALTY_ISSUED', 'NO_FURTHER_ACTION'], true),
-                    default => true,
-                };
-
-                return $inFilter && $this->matches($query, [$row['code'], $row['title'], $row['summary'], ...array_column($row['drivers'], 'code'), ...array_column($row['drivers'], 'name')]);
-            },
-        ));
-
-        return $this->paginate($rows, $page, self::PER_PAGE);
     }
 
     /** @return array<string, mixed>|null */
