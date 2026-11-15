@@ -17,13 +17,6 @@ final class DemoData
     public const STANDINGS_PER_PAGE = 10;
     public const TOTAL_LAPS = 78;
 
-    private const STATUS_LABELS = [
-        'REPORTED' => 'Zgłoszony',
-        'UNDER_INVESTIGATION' => 'W trakcie dochodzenia',
-        'PENALTY_ISSUED' => 'Kara nałożona',
-        'NO_FURTHER_ACTION' => 'Bez dalszych działań',
-    ];
-
     private const LICENCE_LABELS = [
         'SUSPENDED' => 'Zawieszony',
         'AT_BAN_RISK' => 'Ryzyko zawieszenia',
@@ -85,42 +78,6 @@ final class DemoData
         return $counts;
     }
 
-    /** @return array<string, mixed>|null */
-    private function incident(int $id): ?array
-    {
-        if (!isset(self::INCIDENTS[$id])) {
-            return null;
-        }
-
-        $row = $this->incidentRow($id, self::INCIDENTS[$id]);
-        $accused = $this->driver($row['drivers'][0]['code']);
-        $affected = isset($row['drivers'][1]) ? $this->driver($row['drivers'][1]['code']) : null;
-
-        return $row + [
-            'reportedAt' => '26.05.2024, 15:38 UTC',
-            'grandPrix' => 'GP Monako 2024',
-            'circuit' => 'Circuit de Monaco',
-            'totalLaps' => self::TOTAL_LAPS,
-            'corner' => 'Zakręt 1 (Sainte Dévote)',
-            'accused' => $accused,
-            'affected' => $affected,
-            'article' => 'Załącznik L, rozdz. IV, art. 2(b) oraz Przepisy Sportowe F1 art. 33.3',
-            'lodgedBy' => 'Mercedes-AMG Petronas',
-            'lodgedByPerson' => 'Ron Meadows (dyrektor sportowy)',
-            'lodgedAt' => 'Zgłoszono o 15:39:04 UTC',
-            'docRef' => 'DOC 47 / RACING-2024',
-            'evidence' => [
-                'caption' => 'Rys. 1: przód bolidu nr 44 i tył bolidu nr 1 nakładają się na wierzchołku zakrętu (15:38:12).',
-                'file' => 'onboard_cam_turn1_ver_ham.jpg',
-                'size' => '2,4 MB',
-                'sha256' => '7f3c9a1d…4b8e',
-            ],
-            'penalty' => $row['status'] === 'PENALTY_ISSUED'
-                ? ['type' => $row['penaltyLabel'], 'points' => 2, 'article' => 'Załącznik L, rozdz. IV, art. 2', 'reason' => $row['summary']]
-                : null,
-        ];
-    }
-
     /**
      * @return array{kpis: array<string, mixed>, rows: list<array<string, mixed>>, total: int, page: int, pages: int}
      */
@@ -162,36 +119,6 @@ final class DemoData
     }
 
     /** @return array<string, mixed> */
-    public function adjudicationForm(int $incidentId): ?array
-    {
-        $incident = $this->incident($incidentId);
-        if ($incident === null) {
-            return null;
-        }
-
-        return [
-            'incident' => $incident,
-            'currentPoints' => $incident['accused']['points'],
-            'defaultPoints' => 2,
-            'projectedPoints' => $incident['accused']['points'] + 2,
-            'articles' => [
-                'Załącznik L, rozdz. IV, art. 2: spowodowanie kolizji / wypchnięcie z toru',
-                'Załącznik L, rozdz. IV, art. 3: przekroczenie limitów toru',
-                'Załącznik L, rozdz. IV, art. 5: niebezpieczne wypuszczenie z boksu',
-                'Przepisy Sportowe F1 art. 33.3: utrudnianie innego kierowcy',
-            ],
-            'sanctions' => [
-                ['value' => 'TIME_PENALTY:5', 'title' => 'Kara 5 sekund', 'text' => 'Doliczana do czasu wyścigu lub odbywana w boksie'],
-                ['value' => 'TIME_PENALTY:10', 'title' => 'Kara 10 sekund', 'text' => 'Surowa kara czasowa w trakcie wyścigu'],
-                ['value' => 'GRID_DROP:3', 'title' => 'Cofnięcie o 3 miejsca', 'text' => 'Stosowane na starcie następnego wyścigu'],
-                ['value' => 'DRIVE_THROUGH', 'title' => 'Przejazd przez aleję', 'text' => 'Wjazd do alei bez zatrzymania'],
-                ['value' => 'REPRIMAND', 'title' => 'Formalna nagana', 'text' => 'Ostrzeżenie dyscyplinarne bez kary czasowej'],
-                ['value' => 'DISQUALIFICATION', 'title' => 'Dyskwalifikacja (DSQ)', 'text' => 'Całkowite wykluczenie z klasyfikacji'],
-            ],
-        ];
-    }
-
-    /** @return array<string, mixed> */
     public function reportForm(): array
     {
         $accused = [];
@@ -218,36 +145,6 @@ final class DemoData
                 'Niebezpieczne wypuszczenie z boksu (ISC Zał. L rozdz. IV)',
             ],
         ];
-    }
-
-    /**
-     * @param array{0: int, 1: list<string>, 2: string, 3: string, 4: string, 5: ?string} $incident
-     * @return array<string, mixed>
-     */
-    private function incidentRow(int $id, array $incident): array
-    {
-        [$lap, $codes, $title, $summary, $status, $penalty] = $incident;
-
-        return [
-            'id' => $id,
-            'code' => sprintf('INC-%03d', $id),
-            'lap' => $lap,
-            'drivers' => array_map(fn (string $code): array => ['number' => self::DRIVERS[$code][0], 'code' => $code, 'name' => self::DRIVERS[$code][1]], $codes),
-            'title' => $title,
-            'summary' => $summary,
-            'status' => $status,
-            'statusLabel' => self::STATUS_LABELS[$status],
-            'penaltyLabel' => $penalty,
-            'url' => '/incidents/' . $id,
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    private function driver(string $code): array
-    {
-        [$number, $name, $team, $points] = self::DRIVERS[$code];
-
-        return ['code' => $code, 'number' => $number, 'name' => $name, 'team' => $team, 'points' => $points];
     }
 
     /**
