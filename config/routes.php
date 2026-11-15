@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controller\ApiIncidentController;
 use App\Controller\AuthController;
 use App\Controller\HomeController;
 use App\Controller\IncidentController;
@@ -41,4 +42,9 @@ return static function (Router $router, Container $container): void {
     $router->post('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $steward);
 
     $router->get('/standings', StandingsController::class, 'index', $auth);
+
+    // JSON API: errors are JSON ({"error": {...}}), 401 is JSON instead of a redirect; POST needs the X-CSRF-Token header.
+    $router->get('/api/incidents', ApiIncidentController::class, 'index', $auth);
+    $router->post('/api/incidents/{id}/investigate', ApiIncidentController::class, 'investigate', $steward);
+    $router->post('/api/incidents/{id}/dismiss', ApiIncidentController::class, 'dismiss', $steward);
 };
