@@ -15,6 +15,7 @@
     </header>
 
     <form class="form form-card__body" action="/stewards/adjudicate/<?= (int) $incident['id'] ?>" method="post">
+        <?= $view->csrfField() ?>
         <div class="form__row">
             <div class="form-field">
                 <label for="incident-code">ID incydentu</label>

@@ -8,14 +8,19 @@ use App\Demo\DemoData;
 use App\Exception\NotFoundException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Service\ShellService;
+use App\View\ViewHelper;
 
 final class IncidentController extends AbstractController
 {
     private const FILTERS = ['all', 'reported', 'investigation', 'closed'];
 
-    public function __construct(private readonly DemoData $demo)
-    {
-        parent::__construct();
+    public function __construct(
+        ViewHelper $view,
+        private readonly ShellService $shell,
+        private readonly DemoData $demo,
+    ) {
+        parent::__construct($view);
     }
 
     public function index(Request $request): Response
@@ -25,7 +30,7 @@ final class IncidentController extends AbstractController
         $query = $this->queryString($request, 'q');
         $page = (int) $this->queryString($request, 'page', '1');
 
-        return $this->render('incidents/index', $this->demo->shell('/incidents') + [
+        return $this->render('incidents/index', $this->shell->build('/incidents') + [
             'pageTitle' => 'Dziennik incydentów — ApexSteward',
             'counts' => $this->demo->incidentCounts(),
             'filter' => $filter,
@@ -39,7 +44,7 @@ final class IncidentController extends AbstractController
     {
         $incident = $this->demo->incident($id) ?? throw new NotFoundException('Incident not found');
 
-        return $this->render('incidents/show', $this->demo->shell('/incidents') + [
+        return $this->render('incidents/show', $this->shell->build('/incidents') + [
             'pageTitle' => $incident['code'] . ' — ApexSteward',
             'incident' => $incident,
         ]);
@@ -51,7 +56,7 @@ final class IncidentController extends AbstractController
             return Response::redirect('/incidents');
         }
 
-        return $this->render('incidents/create', $this->demo->shell('/incidents/create') + [
+        return $this->render('incidents/create', $this->shell->build('/incidents/create') + [
             'pageTitle' => 'Nowy protest — ApexSteward',
             'form' => $this->demo->reportForm(),
         ]);

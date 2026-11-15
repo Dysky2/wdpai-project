@@ -27,9 +27,19 @@ final class Router
 {
     private array $routes = [];
 
+    /** @var list<string|MiddlewareInterface> */
+    private array $globalMiddlewares = [];
+
     public function __construct(
         private readonly ?Container $container = null,
     ) {
+    }
+
+    /** Registers a middleware that runs before the route-specific ones on every matched route. */
+    public function use(string|MiddlewareInterface $middleware): self
+    {
+        $this->globalMiddlewares[] = $middleware;
+        return $this;
     }
 
     public function get(string $path, string $controller, string $action, array $middlewares = []): self
@@ -135,7 +145,11 @@ final class Router
                 return new Response($buffered !== false ? $buffered : '', 200);
             };
 
-            return $this->executeMiddlewareChain($route['middlewares'], $request, $coreAction);
+            return $this->executeMiddlewareChain(
+                array_merge($this->globalMiddlewares, $route['middlewares']),
+                $request,
+                $coreAction,
+            );
         }
 
         throw new NotFoundException('Route not found: ' . $method . ' ' . $path);
