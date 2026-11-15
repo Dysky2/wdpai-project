@@ -110,14 +110,15 @@ final class PdoIncidentListRepository extends AbstractPdoRepository implements I
      */
     private function searchCondition(string $search): array
     {
-        $like = '%' . addcslashes($search, '\\%_') . '%';
+        // "!" is the LIKE escape character (a backslash would confuse PDO's placeholder parser).
+        $like = '%' . preg_replace('/[!%_]/', '!$0', $search) . '%';
         $fields = ['acc.code', 'acc.first_name || \' \' || acc.last_name', 'aff.code',
             'aff.first_name || \' \' || aff.last_name', 'a.title', 'i.description'];
 
         $sql = [];
         $params = [];
         foreach ($fields as $index => $field) {
-            $sql[] = $field . ' ILIKE :search' . $index . ' ESCAPE \'\\\'';
+            $sql[] = '(' . $field . ') ILIKE :search' . $index . ' ESCAPE \'!\'';
             $params['search' . $index] = $like;
         }
 

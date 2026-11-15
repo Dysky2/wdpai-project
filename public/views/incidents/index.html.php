@@ -4,10 +4,12 @@
         <h1>Dziennik incydentów Grand Prix</h1>
         <p class="page-header__lead">Oficjalna kolejka spraw sędziów FIA i zarejestrowane incydenty na torze</p>
     </div>
-    <div class="session-chip">
-        <span class="session-chip__label">Aktywna sesja</span>
-        <strong>Wyścig (R) • <?= (int) $totalLaps ?> okr.</strong>
-    </div>
+    <?php if ($activeGrandPrix !== null): ?>
+        <div class="session-chip">
+            <span class="session-chip__label">Aktywna sesja</span>
+            <strong><?= $view->e($activeGrandPrix->getName()) ?> • <?= $activeGrandPrix->getTotalLaps() ?> okr.</strong>
+        </div>
+    <?php endif; ?>
 </header>
 
 <section class="kpi-grid" aria-label="Podsumowanie incydentów">
@@ -27,8 +29,11 @@
     <form class="toolbar__search" action="/incidents" method="get" role="search">
         <div class="form-field">
             <label class="visually-hidden" for="gp">Grand Prix</label>
-            <select id="gp" name="gp" disabled>
-                <option>2024 Grand Prix Monako</option>
+            <select id="gp" name="gp">
+                <option value="all"<?= $gpValue === 'all' ? ' selected' : '' ?>>Wszystkie Grand Prix</option>
+                <?php foreach ($grandsPrix as $grandPrix): ?>
+                    <option value="<?= $grandPrix->getId() ?>"<?= $gpValue === (string) $grandPrix->getId() ? ' selected' : '' ?>><?= $view->e($grandPrix->getName()) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
         <div class="form-field">
@@ -48,7 +53,7 @@
             'closed' => ['Zamknięte / rozstrzygnięte', $counts['CLOSED']],
         ] as $key => [$chipLabel, $chipCount]):
             ?>
-            <a class="chip<?= $filter === $key ? ' chip--active' : '' ?>" href="/incidents?<?= htmlspecialchars(http_build_query(['status' => $key, 'q' => $query]), ENT_QUOTES, 'UTF-8') ?>"<?= $filter === $key ? ' aria-current="true"' : '' ?>>
+            <a class="chip<?= $filter === $key ? ' chip--active' : '' ?>" href="/incidents?<?= htmlspecialchars(http_build_query(['status' => $key, 'q' => $query, 'gp' => $gpValue]), ENT_QUOTES, 'UTF-8') ?>"<?= $filter === $key ? ' aria-current="true"' : '' ?>>
                 <?= htmlspecialchars($chipLabel, ENT_QUOTES, 'UTF-8') ?> (<?= (int) $chipCount ?>)
             </a>
         <?php endforeach; ?>
@@ -101,7 +106,7 @@
         <div class="table-footer">
             <p>Pokazano <?= count($rows) ?> z <?= (int) $total ?> incydentów</p>
             <?php
-            $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query], 'page' => $page, 'pages' => $pages];
+            $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query, 'gp' => $gpValue], 'page' => $page, 'pages' => $pages];
             require __DIR__ . '/../partials/pagination.html.php';
             ?>
         </div>
