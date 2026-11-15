@@ -128,7 +128,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
 | GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` |
 | GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
-| GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` |
+| GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` (formularz orzekania z presetami artykułów z bazy i prognozą punktów; sprawa musi być `UNDER_INVESTIGATION`, inaczej 422; zapis kary w S3-17) |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
 
 Demo błędów: `/incidents/abc` i `/incidents/0` zwracają 400, `/incidents/999` oraz nieistniejąca ścieżka (`/nope`) zwracają 404, wszystko ze stroną błędu i bez wyjątku PHP.
