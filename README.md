@@ -127,7 +127,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | POST | `/logout` | `AuthController::logout` |
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
 | GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` |
-| GET | `/incidents/{id}` | `IncidentController::show` |
+| GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
 | GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
 
@@ -136,7 +136,7 @@ Demo błędów: `/incidents/abc` i `/incidents/0` zwracają 400, `/incidents/999
 **Wylogowanie (test ręczny):** zaloguj się, kliknij „Wyloguj” (`POST /logout` z tokenem CSRF, bez tokenu 403). Sesja jest niszczona po stronie serwera, a ciasteczko wygaszane, więc przycisk Wstecz i ponowne wejście na `/incidents` przekierowują na `/login` (dla `/api/*` byłoby 401). Strony chronione wysyłają `Cache-Control: no-store, private`, więc przeglądarka nie pokazuje ich z cache.
 
 > [!NOTE]
-> **Stan:** logowanie, sesja i CSRF działają na prawdziwych kontach z seeda (brak rejestracji; konta tworzy seed). Ekrany (dziennik incydentów, akta sprawy, orzeczenie, nowy protest, klasyfikacja Superlicencji) nadal pokazują dane przykładowe z `src/Demo/DemoData.php`, wstrzykiwane do kontrolerów przez DI; zostaną zastąpione serwisami i repozytoriami, a przyciski akcji niczego jeszcze nie zapisują.
+> **Stan:** logowanie, sesja i CSRF działają na prawdziwych kontach z seeda (brak rejestracji; konta tworzy seed). Dziennik incydentów (`/incidents`) czyta już z bazy: szef zespołu widzi sprawy swojego zespołu (zgłaszającego lub oskarżonego), sędzia wszystkie; filtry `status`, `gp` (domyślnie aktywne Grand Prix, `gp=all` = wszystkie), `q` (kod INC-NNN, kierowca, artykuł, opis) i `page` (6 na stronę). Pozostałe ekrany (akta sprawy, orzeczenie, nowy protest, klasyfikacja Superlicencji) nadal pokazują dane przykładowe z `src/Demo/DemoData.php`, wstrzykiwane do kontrolerów przez DI; zostaną zastąpione serwisami i repozytoriami, a przyciski akcji niczego jeszcze nie zapisują.
 
 ### Wstrzykiwanie zależności (DI)
 

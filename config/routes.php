@@ -19,7 +19,7 @@ return static function (Router $router, Container $container): void {
     // Every POST needs a valid CSRF token (form field or X-CSRF-Token header).
     $router->use(CsrfMiddleware::class);
 
-    // Roles are assigned per route; ownership of a single case is checked in IncidentAccessService.
+    // Roles are assigned per route; ownership of a single case is checked in IncidentService::getForUser.
     $authService = $container->get(AuthService::class);
     $auth = [AuthMiddleware::class];
     $principal = [AuthMiddleware::class, RoleMiddleware::for($authService, Role::TEAM_PRINCIPAL)];
