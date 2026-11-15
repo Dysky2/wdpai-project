@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\TransactionRunnerInterface;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
+use App\Exception\UnprocessableEntityException;
 use App\Model\IncidentCriteria;
 use App\Model\IncidentDetail;
 use App\Model\IncidentStatus;
@@ -15,6 +17,7 @@ use App\Model\User;
 use App\Repository\GrandPrixRepositoryInterface;
 use App\Repository\IncidentDetailRepositoryInterface;
 use App\Repository\IncidentListRepositoryInterface;
+use App\Repository\IncidentRepositoryInterface;
 
 /**
  * Incident log use cases. Ownership scope is decided here, never in the view:
@@ -40,6 +43,8 @@ final class IncidentService
         private readonly IncidentListRepositoryInterface $incidents,
         private readonly GrandPrixRepositoryInterface $grandsPrix,
         private readonly IncidentDetailRepositoryInterface $details,
+        private readonly IncidentRepositoryInterface $incidentRepository,
+        private readonly TransactionRunnerInterface $transactions,
     ) {
     }
 
@@ -99,6 +104,50 @@ final class IncidentService
                 'article' => $penalty['articleReference'],
                 'reason' => $penalty['reason'],
             ],
+        ];
+    }
+
+    /**
+     * REPORTED -> UNDER_INVESTIGATION.
+     *
+     * @return array{id: int, code: string, status: string, statusLabel: string, url: string}
+     * @throws NotFoundException            when the case does not exist
+     * @throws UnprocessableEntityException when the transition is not allowed
+     */
+    public function investigate(int $id): array
+    {
+        return $this->transition($id, IncidentStatus::UNDER_INVESTIGATION);
+    }
+
+    /**
+     * UNDER_INVESTIGATION -> NO_FURTHER_ACTION.
+     *
+     * @return array{id: int, code: string, status: string, statusLabel: string, url: string}
+     * @throws NotFoundException            when the case does not exist
+     * @throws UnprocessableEntityException when the transition is not allowed
+     */
+    public function dismiss(int $id): array
+    {
+        return $this->transition($id, IncidentStatus::NO_FURTHER_ACTION);
+    }
+
+    /** Status change under a row lock, so two stewards cannot move the same case at once. */
+    private function transition(int $id, IncidentStatus $target): array
+    {
+        $incident = $this->transactions->transactional(function () use ($id, $target) {
+            $incident = $this->incidentRepository->findByIdForUpdate($id) ?? throw new NotFoundException('Incident not found');
+            $incident->getStatus()->assertCanTransitionTo($target);
+            $this->incidentRepository->updateStatus($id, $target);
+
+            return $incident;
+        });
+
+        return [
+            'id' => $incident->getId(),
+            'code' => sprintf('INC-%03d', $incident->getId()),
+            'status' => $target->value,
+            'statusLabel' => self::STATUS_LABELS[$target->value],
+            'url' => '/incidents/' . $incident->getId(),
         ];
     }
 
