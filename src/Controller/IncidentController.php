@@ -8,6 +8,9 @@ use App\Demo\DemoData;
 use App\Exception\NotFoundException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Exception\UnauthorizedException;
+use App\Service\AuthService;
+use App\Service\IncidentAccessService;
 use App\Service\ShellService;
 use App\View\ViewHelper;
 
@@ -19,6 +22,8 @@ final class IncidentController extends AbstractController
         ViewHelper $view,
         private readonly ShellService $shell,
         private readonly DemoData $demo,
+        private readonly AuthService $auth,
+        private readonly IncidentAccessService $access,
     ) {
         parent::__construct($view);
     }
@@ -42,6 +47,10 @@ final class IncidentController extends AbstractController
 
     public function show(Request $request, int $id): Response
     {
+        // 404 for a missing case, 403 for another team's case (ownership is checked on the server).
+        $user = $this->auth->currentUser() ?? throw new UnauthorizedException();
+        $this->access->getForUser($user, $id);
+
         $incident = $this->demo->incident($id) ?? throw new NotFoundException('Incident not found');
 
         return $this->render('incidents/show', $this->shell->build('/incidents') + [
