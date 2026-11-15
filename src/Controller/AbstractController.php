@@ -7,13 +7,14 @@ namespace App\Controller;
 use App\Http\JsonResponse;
 use App\Http\Request;
 use App\Http\Response;
+use App\View\ViewHelper;
 
 abstract class AbstractController
 {
     private string $viewsPath;
     private string $layoutPath;
 
-    public function __construct()
+    public function __construct(protected readonly ViewHelper $view)
     {
         $this->viewsPath = dirname(__DIR__, 2) . '/public/views';
         $this->layoutPath = $this->viewsPath . '/layout.html.php';
@@ -39,7 +40,8 @@ abstract class AbstractController
             throw new \RuntimeException('Layout not found: ' . $this->layoutPath);
         }
 
-        // Extract data into local scope (available inside the template)
+        // Template scope: $view (ViewHelper) plus the controller data
+        $view = $this->view;
         extract($data, EXTR_SKIP);
 
         ob_start();

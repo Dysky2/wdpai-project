@@ -8,24 +8,29 @@ use App\Controller\IncidentController;
 use App\Controller\StandingsController;
 use App\Controller\StewardController;
 use App\Http\Router;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\CsrfMiddleware;
 
 return static function (Router $router): void {
+    // Every POST needs a valid CSRF token (form field or X-CSRF-Token header).
+    $router->use(CsrfMiddleware::class);
+
+    $auth = [AuthMiddleware::class];
+
     $router->get('/', HomeController::class, 'index');
 
     $router->get('/login', AuthController::class, 'login');
     $router->post('/login', AuthController::class, 'login');
-    $router->get('/register', AuthController::class, 'register');
-    $router->post('/register', AuthController::class, 'register');
     $router->post('/logout', AuthController::class, 'logout');
 
-    $router->get('/incidents', IncidentController::class, 'index');
+    $router->get('/incidents', IncidentController::class, 'index', $auth);
     // Static /incidents/create must be registered before /incidents/{id}.
-    $router->get('/incidents/create', IncidentController::class, 'create');
-    $router->post('/incidents', IncidentController::class, 'create');
-    $router->get('/incidents/{id}', IncidentController::class, 'show');
+    $router->get('/incidents/create', IncidentController::class, 'create', $auth);
+    $router->post('/incidents', IncidentController::class, 'create', $auth);
+    $router->get('/incidents/{id}', IncidentController::class, 'show', $auth);
 
-    $router->get('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate');
-    $router->post('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate');
+    $router->get('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $auth);
+    $router->post('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $auth);
 
-    $router->get('/standings', StandingsController::class, 'index');
+    $router->get('/standings', StandingsController::class, 'index', $auth);
 };

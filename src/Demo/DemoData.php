@@ -73,20 +73,6 @@ final class DemoData
         31 => [9, ['RIC', 'SAR'], 'Kontakt kół w zakręcie 6', 'Typowy incydent wyścigowy, brak winnego', 'NO_FURTHER_ACTION', null],
     ];
 
-    /** @return array{navItems: list<array{label: string, href: string, route: string}>, currentUser: array{roleLabel: string, name: string, initial: string}, activeRoute: string} */
-    public function shell(string $activeRoute): array
-    {
-        return [
-            'navItems' => [
-                ['label' => 'Incydenty', 'href' => '/incidents', 'route' => '/incidents'],
-                ['label' => 'Klasyfikacja', 'href' => '/standings', 'route' => '/standings'],
-                ['label' => 'Nowy protest', 'href' => '/incidents/create', 'route' => '/incidents/create'],
-            ],
-            'currentUser' => ['roleLabel' => 'Sędzia FIA', 'name' => 'John D.', 'initial' => 'J'],
-            'activeRoute' => $activeRoute,
-        ];
-    }
-
     /** @return list<array<string, mixed>> */
     public function incidents(): array
     {

@@ -20,6 +20,7 @@
     </div>
 
     <form class="form form-card__body" action="/incidents" method="post" enctype="multipart/form-data">
+        <?= $view->csrfField() ?>
         <div class="form__row">
             <div class="form-field">
                 <label for="grand_prix_id">Sesja Grand Prix <span class="required">*</span></label>

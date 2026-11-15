@@ -37,6 +37,7 @@ $activeRoute ??= '';
             <?php if ($currentUser !== null): ?>
                 <span class="user-chip"><?= htmlspecialchars($currentUser['roleLabel'] . ' (' . $currentUser['name'] . ')', ENT_QUOTES, 'UTF-8') ?></span>
                 <form action="/logout" method="post">
+                    <?= $view->csrfField() ?>
                     <button class="link-button" type="submit">Wyloguj</button>
                 </form>
                 <span class="avatar" aria-hidden="true"><?= htmlspecialchars($currentUser['initial'], ENT_QUOTES, 'UTF-8') ?></span>

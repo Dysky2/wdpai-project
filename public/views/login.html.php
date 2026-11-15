@@ -7,6 +7,10 @@
         </div>
 
         <form class="form" action="/login" method="post" novalidate>
+            <?= $view->csrfField() ?>
+            <?php if (!empty($formError)): ?>
+                <div class="alert alert--error" role="alert"><?= $view->e($formError) ?></div>
+            <?php endif; ?>
             <?php
             $field = ['id' => 'email', 'name' => 'email', 'label' => 'Adres e-mail', 'type' => 'email', 'autocomplete' => 'username', 'placeholder' => 'np. toto@mercedes.f1', 'value' => $old['email'] ?? '', 'error' => $errors['email'] ?? null];
             require __DIR__ . '/partials/form-field.html.php';
@@ -17,6 +21,5 @@
             <button class="button button--block" type="submit">Zaloguj się <span aria-hidden="true">→</span></button>
         </form>
 
-        <p class="panel-card__footer">Nowy użytkownik? <a href="/register">Utwórz konto</a></p>
     </div>
 </section>

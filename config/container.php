@@ -9,6 +9,9 @@ use App\Core\Database;
 use App\Core\SystemClock;
 use App\Core\TransactionRunnerInterface;
 use App\Http\Router;
+use App\Http\Session;
+use App\Service\AuthService;
+use App\View\ViewHelper;
 use App\Repository\DriverRepositoryInterface;
 use App\Repository\EvidenceRepositoryInterface;
 use App\Repository\GrandPrixRepositoryInterface;
@@ -43,6 +46,14 @@ $container->singleton(IncidentRepositoryInterface::class, static fn (Container $
 $container->singleton(EvidenceRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoEvidenceRepository::class));
 $container->singleton(PenaltyRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoPenaltyRepository::class));
 $container->singleton(StandingRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoStandingRepository::class));
+
+// Autowired classes are not cached by Container, so stateful services are registered as singletons.
+$container->singleton(Session::class, static fn (Container $c): Session => new Session($c->get(Config::class)));
+$container->singleton(ViewHelper::class, static fn (Container $c): ViewHelper => new ViewHelper($c->get(Session::class)));
+$container->singleton(
+    AuthService::class,
+    static fn (Container $c): AuthService => new AuthService($c->get(UserRepositoryInterface::class), $c->get(Session::class)),
+);
 
 $container->singleton(Router::class, static fn (Container $c): Router => new Router($c));
 
