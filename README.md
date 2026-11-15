@@ -133,6 +133,8 @@ Trasy są zdefiniowane w `config/routes.php`.
 
 Demo błędów: `/incidents/abc` i `/incidents/0` zwracają 400, `/incidents/999` oraz nieistniejąca ścieżka (`/nope`) zwracają 404, wszystko ze stroną błędu i bez wyjątku PHP.
 
+**Wylogowanie (test ręczny):** zaloguj się, kliknij „Wyloguj” (`POST /logout` z tokenem CSRF, bez tokenu 403). Sesja jest niszczona po stronie serwera, a ciasteczko wygaszane, więc przycisk Wstecz i ponowne wejście na `/incidents` przekierowują na `/login` (dla `/api/*` byłoby 401). Strony chronione wysyłają `Cache-Control: no-store, private`, więc przeglądarka nie pokazuje ich z cache.
+
 > [!NOTE]
 > **Stan:** logowanie, sesja i CSRF działają na prawdziwych kontach z seeda (brak rejestracji; konta tworzy seed). Ekrany (dziennik incydentów, akta sprawy, orzeczenie, nowy protest, klasyfikacja Superlicencji) nadal pokazują dane przykładowe z `src/Demo/DemoData.php`, wstrzykiwane do kontrolerów przez DI; zostaną zastąpione serwisami i repozytoriami, a przyciski akcji niczego jeszcze nie zapisują.
 
