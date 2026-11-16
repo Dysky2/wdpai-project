@@ -67,7 +67,7 @@
             <header class="card__header"><h2 class="card__title">Status orzeczenia</h2></header>
             <div class="card__body side-block">
                 <h3 class="section-label">Aktualne orzeczenie</h3>
-                <p class="status-banner status-banner--<?= $incident['status'] === 'UNDER_INVESTIGATION' ? 'investigation' : 'default' ?>">
+                <p class="status-banner status-banner--<?= $incident['status'] === 'UNDER_INVESTIGATION' ? 'investigation' : 'default' ?>" data-status-banner>
                     <?php
                     $badge = ['status' => $incident['status'], 'label' => $incident['penalty']['label'] ?? $incident['statusLabel']];
                     require __DIR__ . '/../partials/status-badge.html.php';
@@ -97,12 +97,10 @@
                 <header class="card__header"><h2 class="card__title">Akcje sędziego</h2></header>
                 <div class="card__body actions">
                     <p class="text-muted">Wybierz rozstrzygnięcie dla tego incydentu:</p>
+                    <p class="alert alert--error" role="alert" data-incident-error hidden></p>
                     <button class="button button--secondary button--block" type="button" data-incident-action="investigate" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'REPORTED' ? '' : ' disabled' ?>>Oznacz jako w trakcie dochodzenia</button>
-                    <?php if ($incident['status'] === 'UNDER_INVESTIGATION'): ?>
-                        <a class="button button--block" href="/stewards/adjudicate/<?= (int) $incident['id'] ?>">Nałóż karę <span aria-hidden="true">→</span></a>
-                    <?php else: ?>
-                        <span class="button button--block button--disabled" aria-disabled="true">Nałóż karę</span>
-                    <?php endif; ?>
+                    <a class="button button--block" data-adjudicate-link href="/stewards/adjudicate/<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? '' : ' hidden' ?>>Nałóż karę <span aria-hidden="true">→</span></a>
+                    <span class="button button--block button--disabled" data-adjudicate-disabled aria-disabled="true"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? ' hidden' : '' ?>>Nałóż karę</span>
                     <button class="button button--secondary button--block" type="button" data-incident-action="dismiss" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? '' : ' disabled' ?>>Umorz sprawę (bez dalszych działań)</button>
                 </div>
             </section>
