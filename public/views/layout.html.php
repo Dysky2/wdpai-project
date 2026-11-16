@@ -47,5 +47,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <?php require __DIR__ . '/partials/tabbar.html.php'; ?>
 
     <script src="/js/theme.js" defer></script>
+    <script type="module" src="/js/incidents.js"></script>
+    <script type="module" src="/js/stewards.js"></script>
 </body>
 </html>
