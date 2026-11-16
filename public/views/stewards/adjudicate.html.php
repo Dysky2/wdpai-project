@@ -32,12 +32,16 @@
             <select id="article_id" name="article_id" required>
                 <?php foreach ($articles as $article): ?>
                     <?php $preset = \App\Model\SanctionOption::forPreset($article->getDefaultPenaltyType(), $article->getDefaultSanctionValue()); ?>
-                    <option value="<?= (int) $article->getId() ?>"
+                    <option value="<?= (int) $article->getId() ?>"<?= (string) $article->getId() === ($old['article_id'] ?? '') ? ' selected' : '' ?>
+
                             data-sanction="<?= $view->e($preset?->toField() ?? '') ?>"
                             data-points="<?= (int) $article->getDefaultPoints() ?>"
                             data-wording="<?= $view->e($article->getPrecedentWording()) ?>"><?= $view->e($article->getReference()) ?>: <?= $view->e($article->getTitle()) ?></option>
                 <?php endforeach; ?>
             </select>
+            <?php if (isset($errors['article_id'])): ?>
+                <p class="form-field__error"><?= $view->e($errors['article_id']) ?></p>
+            <?php endif; ?>
             <p class="form-field__hint">Główny artykuł określający naruszenie standardów jazdy. Wybór artykułu sugeruje sankcję i punkty (można je zmienić).</p>
         </div>
 
@@ -51,6 +55,9 @@
                     </label>
                 <?php endforeach; ?>
             </div>
+            <?php if (isset($errors['sanction'])): ?>
+                <p class="form-field__error"><?= $view->e($errors['sanction']) ?></p>
+            <?php endif; ?>
         </fieldset>
 
         <div class="form-field">
@@ -60,11 +67,17 @@
                 <p class="text-muted">Maks. 12 punktów w ciągu 12 miesięcy oznacza automatyczne zawieszenie na 1 wyścig.<br>
                     <span class="accent-text">Obecny bilans kierowcy: <?= (int) $currentPoints ?> pkt → prognozowany: <span data-projected-points><?= (int) $projectedPoints ?></span> pkt</span></p>
             </div>
+            <?php if (isset($errors['points'])): ?>
+                <p class="form-field__error"><?= $view->e($errors['points']) ?></p>
+            <?php endif; ?>
         </div>
 
         <div class="form-field">
             <label for="reason">Pisemne uzasadnienie sędziów (trafi do oficjalnego biuletynu FIA)</label>
-            <textarea id="reason" name="reason" rows="6" maxlength="1000" required></textarea>
+            <textarea id="reason" name="reason" rows="6" maxlength="1000" required<?= isset($errors['reason']) ? ' aria-invalid="true" aria-describedby="reason-error"' : '' ?>><?= $view->e($old['reason'] ?? '') ?></textarea>
+            <?php if (isset($errors['reason'])): ?>
+                <p class="form-field__error" id="reason-error"><?= $view->e($errors['reason']) ?></p>
+            <?php endif; ?>
             <button class="button button--secondary" type="button" data-insert-precedent hidden>Wstaw wzorcowe sformułowanie</button>
         </div>
 
