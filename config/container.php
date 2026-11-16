@@ -32,6 +32,8 @@ use App\Repository\PdoStandingRepository;
 use App\Repository\PdoUserRepository;
 use App\Repository\PenaltyRepositoryInterface;
 use App\Repository\StandingRepositoryInterface;
+use App\Repository\PdoTeamRepository;
+use App\Repository\TeamRepositoryInterface;
 use App\Repository\UserRepositoryInterface;
 
 $container = new Container();
@@ -44,6 +46,7 @@ $container->singleton(TransactionRunnerInterface::class, static fn (Container $c
 $container->singleton(ClockInterface::class, static fn (): ClockInterface => new SystemClock());
 
 $container->singleton(UserRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoUserRepository::class));
+$container->singleton(TeamRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoTeamRepository::class));
 $container->singleton(DriverRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoDriverRepository::class));
 $container->singleton(GrandPrixRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoGrandPrixRepository::class));
 $container->singleton(InfringementArticleRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoInfringementArticleRepository::class));
