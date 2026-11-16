@@ -18,6 +18,12 @@ final class ViewHelper
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 
+    /** @return list<array{type: string, message: string}> queued flash messages (cleared on read) */
+    public function pullFlash(): array
+    {
+        return $this->session->pullFlash();
+    }
+
     public function csrfToken(): string
     {
         return $this->session->csrfToken();

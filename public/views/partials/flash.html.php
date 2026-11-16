@@ -1,6 +1,6 @@
 <?php
 /** Flash messages. $flash: list of ['type' => 'success'|'error'|'info', 'message' => string]. */
-$flash ??= [];
+$flash ??= isset($view) ? $view->pullFlash() : [];
 ?>
 <?php if ($flash !== []): ?>
     <div class="flash">

@@ -4,20 +4,31 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\ClockInterface;
 use App\Core\TransactionRunnerInterface;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\UnprocessableEntityException;
+use App\Exception\ValidationException;
+use App\Model\Evidence;
+use App\Model\Incident;
 use App\Model\IncidentCriteria;
 use App\Model\IncidentDetail;
 use App\Model\IncidentStatus;
 use App\Model\IncidentSummary;
 use App\Model\PenaltyType;
 use App\Model\User;
+use App\Repository\DriverRepositoryInterface;
+use App\Repository\EvidenceRepositoryInterface;
 use App\Repository\GrandPrixRepositoryInterface;
 use App\Repository\IncidentDetailRepositoryInterface;
 use App\Repository\IncidentListRepositoryInterface;
 use App\Repository\IncidentRepositoryInterface;
+use App\Repository\InfringementArticleRepositoryInterface;
+use App\Repository\TeamRepositoryInterface;
+use App\Service\Command\ReportIncidentCommand;
+use App\Service\Upload\InvalidUploadException;
+use App\Service\Upload\UploadService;
 
 /**
  * Incident log use cases. Ownership scope is decided here, never in the view:
@@ -45,7 +56,161 @@ final class IncidentService
         private readonly IncidentDetailRepositoryInterface $details,
         private readonly IncidentRepositoryInterface $incidentRepository,
         private readonly TransactionRunnerInterface $transactions,
+        private readonly DriverRepositoryInterface $drivers,
+        private readonly InfringementArticleRepositoryInterface $articles,
+        private readonly EvidenceRepositoryInterface $evidence,
+        private readonly TeamRepositoryInterface $teams,
+        private readonly UploadService $uploads,
+        private readonly ClockInterface $clock,
     ) {
+    }
+
+    public const DESCRIPTION_MIN = 20;
+    public const DESCRIPTION_MAX = 500;
+
+    /**
+     * Data for the protest form of the user's team.
+     *
+     * @throws ForbiddenException when the user is not a team principal bound to a team
+     */
+    public function reportForm(User $user): ReportForm
+    {
+        $teamId = $this->reportingTeamId($user);
+        $team = $this->teams->findById($teamId) ?? throw new ForbiddenException('Unknown team');
+
+        return new ReportForm(
+            $team,
+            $user->getDisplayName(),
+            $this->grandsPrix->findAll(),
+            $this->grandsPrix->findActive(),
+            array_values(array_filter($this->drivers->findAll(), static fn ($d): bool => $d->getTeamId() !== $teamId)),
+            $this->drivers->findByTeamId($teamId),
+            $this->articles->findAll(),
+        );
+    }
+
+    /**
+     * Files a protest: validates the input, then saves the case and its evidence metadata in one transaction.
+     * A stored file is deleted again when the database write fails.
+     *
+     * @throws ForbiddenException  when the user may not file protests
+     * @throws ValidationException with per-field errors (HTTP 422)
+     */
+    public function report(User $user, ReportIncidentCommand $cmd): Incident
+    {
+        $teamId = $this->reportingTeamId($user);
+        $errors = $this->validateReport($teamId, $cmd);
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+
+        $stored = null;
+        if ($this->hasFile($cmd->evidenceFile)) {
+            try {
+                $stored = $this->uploads->store($cmd->evidenceFile ?? []);
+            } catch (InvalidUploadException $e) {
+                throw new ValidationException(['evidence' => ['key' => $e->getErrorKey(), 'params' => $e->getParams()]]);
+            }
+        }
+
+        try {
+            return $this->transactions->transactional(function () use ($user, $cmd, $stored): Incident {
+                $now = $this->clock->now();
+                $incident = $this->incidentRepository->save(new Incident(
+                    null,
+                    $cmd->grandPrixId,
+                    $user->getId(),
+                    $cmd->accusedDriverId,
+                    $cmd->affectedDriverId,
+                    $cmd->infringementArticleId,
+                    $cmd->lapNumber,
+                    $cmd->description,
+                    IncidentStatus::REPORTED,
+                    $now,
+                    $now,
+                ));
+                if ($stored !== null) {
+                    $this->evidence->save(new Evidence(
+                        null,
+                        (int) $incident->getId(),
+                        $stored->filePath,
+                        $stored->originalName,
+                        $stored->mimeType,
+                        $stored->sizeBytes,
+                        $stored->sha256,
+                        $now,
+                    ));
+                }
+
+                return $incident;
+            });
+        } catch (\Throwable $e) {
+            if ($stored !== null) {
+                $this->uploads->delete($stored);
+            }
+            throw $e;
+        }
+    }
+
+    /** @return array<string, array{key: string, params: array<string, scalar>}> */
+    private function validateReport(int $teamId, ReportIncidentCommand $cmd): array
+    {
+        $errors = [];
+        $grandPrix = $cmd->grandPrixId > 0 ? $this->grandsPrix->findById($cmd->grandPrixId) : null;
+
+        if ($grandPrix === null) {
+            $errors['grand_prix_id'] = ['key' => 'validation.grand_prix_unknown', 'params' => []];
+        } elseif ($cmd->lapNumber < 1 || $cmd->lapNumber > $grandPrix->getTotalLaps()) {
+            $errors['lap_number'] = ['key' => 'validation.lap_range', 'params' => ['max' => $grandPrix->getTotalLaps()]];
+        }
+
+        $accused = $cmd->accusedDriverId > 0 ? $this->drivers->findById($cmd->accusedDriverId) : null;
+        if ($accused === null) {
+            $errors['accused_driver_id'] = ['key' => 'validation.accused_unknown', 'params' => []];
+        } elseif ($accused->getTeamId() === $teamId) {
+            $errors['accused_driver_id'] = ['key' => 'validation.accused_own_team', 'params' => []];
+        }
+
+        if ($cmd->affectedDriverId !== null) {
+            $affected = $cmd->affectedDriverId > 0 ? $this->drivers->findById($cmd->affectedDriverId) : null;
+            if ($affected === null) {
+                $errors['affected_driver_id'] = ['key' => 'validation.affected_unknown', 'params' => []];
+            } elseif ($affected->getTeamId() !== $teamId) {
+                $errors['affected_driver_id'] = ['key' => 'validation.affected_not_own', 'params' => []];
+            } elseif ($affected->getId() === $cmd->accusedDriverId) {
+                $errors['affected_driver_id'] = ['key' => 'validation.affected_same_as_accused', 'params' => []];
+            }
+        }
+
+        if ($cmd->infringementArticleId < 1 || $this->articles->findById($cmd->infringementArticleId) === null) {
+            $errors['infringement_article_id'] = ['key' => 'validation.article_unknown', 'params' => []];
+        }
+
+        // Text that is not valid UTF-8 would be rejected by PostgreSQL (HTTP 500), so it is refused here.
+        $length = mb_strlen($cmd->description);
+        if (!mb_check_encoding($cmd->description, 'UTF-8') || $length < self::DESCRIPTION_MIN || $length > self::DESCRIPTION_MAX) {
+            $errors['description'] = [
+                'key' => 'validation.description_length',
+                'params' => ['min' => self::DESCRIPTION_MIN, 'max' => self::DESCRIPTION_MAX],
+            ];
+        }
+
+        return $errors;
+    }
+
+    /** True when the browser actually sent a file (an empty file input reports UPLOAD_ERR_NO_FILE). */
+    private function hasFile(?array $file): bool
+    {
+        return $file !== null && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+    }
+
+    private function reportingTeamId(User $user): int
+    {
+        if (!$user->isTeamPrincipal() || $user->getTeamId() === null) {
+            throw new ForbiddenException('Only a team principal can file a protest');
+        }
+
+        return $user->getTeamId();
     }
 
     /**
