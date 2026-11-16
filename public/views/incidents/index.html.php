@@ -26,7 +26,7 @@
 </section>
 
 <section class="card toolbar" aria-label="Filtry incydentów">
-    <form class="toolbar__search" action="/incidents" method="get" role="search">
+    <form class="toolbar__search" action="/incidents" method="get" role="search" data-incidents-form>
         <div class="form-field">
             <label class="visually-hidden" for="gp">Grand Prix</label>
             <select id="gp" name="gp">
@@ -40,11 +40,11 @@
             <label class="visually-hidden" for="q">Szukaj</label>
             <input type="search" id="q" name="q" value="<?= htmlspecialchars($query, ENT_QUOTES, 'UTF-8') ?>" placeholder="Szukaj kierowcy (np. VER), ID (INC-042) lub opisu…">
         </div>
-        <input type="hidden" name="status" value="<?= htmlspecialchars($filter, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="status" data-incidents-status value="<?= htmlspecialchars($filter, ENT_QUOTES, 'UTF-8') ?>">
         <button class="button button--secondary" type="submit">Szukaj</button>
     </form>
 
-    <nav class="chips" aria-label="Filtr statusu">
+    <nav class="chips" aria-label="Filtr statusu" data-incidents-chips>
         <?php
         foreach ([
             'all' => ['Wszystkie', $counts['TOTAL']],
@@ -60,10 +60,10 @@
     </nav>
 </section>
 
-<?php if ($rows === []): ?>
-    <p class="alert" role="status">Brak incydentów spełniających kryteria wyszukiwania.</p>
-<?php else: ?>
-    <div class="table-wrap">
+<div data-incidents-results aria-busy="false">
+    <p class="alert" role="status" data-incidents-empty<?= $rows === [] ? '' : ' hidden' ?>>Brak incydentów spełniających kryteria wyszukiwania.</p>
+    <p class="alert alert--error" role="alert" data-incidents-error hidden></p>
+    <div class="table-wrap" data-incidents-table<?= $rows === [] ? ' hidden' : '' ?>>
         <table class="table table--cards table--incidents">
             <caption class="visually-hidden">Lista incydentów</caption>
             <thead>
@@ -76,7 +76,7 @@
                     <th scope="col"><span class="visually-hidden">Akcja</span></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody data-incidents-body>
                 <?php foreach ($rows as $row): ?>
                     <tr>
                         <td class="cell-lap"><span class="lap-chip">L<?= str_pad((string) $row['lap'], 2, '0', STR_PAD_LEFT) ?></span></td>
@@ -104,11 +104,13 @@
         </table>
 
         <div class="table-footer">
-            <p>Pokazano <?= count($rows) ?> z <?= (int) $total ?> incydentów</p>
-            <?php
-            $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query, 'gp' => $gpValue], 'page' => $page, 'pages' => $pages];
-            require __DIR__ . '/../partials/pagination.html.php';
-            ?>
+            <p data-incidents-summary>Pokazano <?= count($rows) ?> z <?= (int) $total ?> incydentów</p>
+            <div data-incidents-pager>
+                <?php
+                $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query, 'gp' => $gpValue], 'page' => $page, 'pages' => $pages];
+                require __DIR__ . '/../partials/pagination.html.php';
+                ?>
+            </div>
         </div>
     </div>
-<?php endif; ?>
+</div>
