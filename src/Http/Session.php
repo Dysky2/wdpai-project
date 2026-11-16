@@ -15,6 +15,7 @@ final class Session
     private const KEY_USER_ID = 'user_id';
     private const KEY_LANG = 'lang';
     private const KEY_CSRF = 'csrf_token';
+    private const KEY_FLASH = 'flash';
 
     public function __construct(private readonly Config $config)
     {
@@ -52,6 +53,27 @@ final class Session
     {
         $this->start();
         $_SESSION[self::KEY_LANG] = $lang === 'en' ? 'en' : 'pl';
+    }
+
+    /** Queues a one-shot message shown on the next rendered page. */
+    public function addFlash(string $type, string $message): void
+    {
+        $this->start();
+        $_SESSION[self::KEY_FLASH][] = ['type' => $type, 'message' => $message];
+    }
+
+    /**
+     * Returns the queued messages and clears them.
+     *
+     * @return list<array{type: string, message: string}>
+     */
+    public function pullFlash(): array
+    {
+        $this->start();
+        $messages = $_SESSION[self::KEY_FLASH] ?? [];
+        unset($_SESSION[self::KEY_FLASH]);
+
+        return is_array($messages) ? array_values($messages) : [];
     }
 
     /** Binds the session to a user: new session id and a fresh CSRF token (prevents fixation). */
