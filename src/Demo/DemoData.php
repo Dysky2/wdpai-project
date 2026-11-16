@@ -118,35 +118,6 @@ final class DemoData
         return ['kpis' => $kpis] + $this->paginate($rows, $page, self::STANDINGS_PER_PAGE);
     }
 
-    /** @return array<string, mixed> */
-    public function reportForm(): array
-    {
-        $accused = [];
-        foreach (self::DRIVERS as $code => $driver) {
-            if ($driver[2] !== 'Mercedes-AMG Petronas') {
-                $accused[] = ['value' => $code, 'label' => 'Bolid ' . $driver[0] . ': ' . $driver[1] . ' (' . $driver[2] . ')'];
-            }
-        }
-
-        return [
-            'grandPrix' => '2024 Grand Prix Monako: wyścig',
-            'team' => 'Mercedes-AMG PETRONAS F1 Team',
-            'teamLicence' => 'Licencja zespołu FIA #MERC-2024-GER',
-            'representative' => 'Ron Meadows (dyrektor sportowy)',
-            'totalLaps' => self::TOTAL_LAPS,
-            'accusedDrivers' => $accused,
-            'ownDrivers' => [
-                ['value' => 'HAM', 'label' => 'Bolid 44: Lewis Hamilton'],
-                ['value' => 'RUS', 'label' => 'Bolid 63: George Russell'],
-            ],
-            'articles' => [
-                'Spowodowanie kolizji / wypchnięcie z toru (ISC Zał. L rozdz. IV)',
-                'Przekroczenie limitów toru (ISC Zał. L rozdz. IV)',
-                'Niebezpieczne wypuszczenie z boksu (ISC Zał. L rozdz. IV)',
-            ],
-        ];
-    }
-
     /**
      * @param array{0: int, 1: string, 2: string, 3: int, 4: int} $driver
      * @return array<string, mixed>

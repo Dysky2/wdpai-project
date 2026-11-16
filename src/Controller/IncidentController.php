@@ -4,24 +4,33 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Demo\DemoData;
+use App\Exception\UnauthorizedException;
+use App\Exception\ValidationException;
 use App\Http\Request;
 use App\Http\Response;
-use App\Exception\UnauthorizedException;
-use App\Service\AuthService;
+use App\Http\Session;
 use App\Model\IncidentCriteria;
+use App\Model\User;
+use App\Service\AuthService;
+use App\Service\Command\ReportIncidentCommand;
 use App\Service\IncidentService;
 use App\Service\ShellService;
+use App\Service\ValidationMessages;
 use App\View\ViewHelper;
 
 final class IncidentController extends AbstractController
 {
+    private const FORM_FIELDS = [
+        'grand_prix_id', 'lap_number', 'accused_driver_id', 'affected_driver_id', 'infringement_article_id', 'description',
+    ];
+
     public function __construct(
         ViewHelper $view,
         private readonly ShellService $shell,
-        private readonly DemoData $demo,
         private readonly AuthService $auth,
         private readonly IncidentService $incidentService,
+        private readonly Session $session,
+        private readonly ValidationMessages $messages,
     ) {
         parent::__construct($view);
     }
@@ -66,15 +75,77 @@ final class IncidentController extends AbstractController
         ]);
     }
 
+    /** GET /incidents/create: empty protest form (role is checked by the route middleware). */
     public function create(Request $request): Response
     {
-        if ($request->isPost()) {
-            return Response::redirect('/incidents');
+        $user = $this->auth->currentUser() ?? throw new UnauthorizedException();
+
+        return $this->renderForm($user, [], []);
+    }
+
+    /** POST /incidents: files the protest, or shows the form again with field errors (422). */
+    public function store(Request $request): Response
+    {
+        $user = $this->auth->currentUser() ?? throw new UnauthorizedException();
+        $old = $this->oldInput($request);
+
+        try {
+            $incident = $this->incidentService->report($user, $this->command($request));
+        } catch (ValidationException $e) {
+            return $this->renderForm($user, $old, $this->messages->messages($e->getErrors()))->setStatusCode(422);
         }
+
+        $this->session->addFlash('success', 'Protest ' . $incident->getCode() . ' został zgłoszony do sędziów.');
+
+        return Response::redirect('/incidents/' . $incident->getId());
+    }
+
+    /**
+     * @param array<string, string> $old    submitted values, shown again after an error
+     * @param array<string, string> $errors field => message
+     */
+    private function renderForm(User $user, array $old, array $errors): Response
+    {
+        $form = $this->incidentService->reportForm($user);
 
         return $this->render('incidents/create', $this->shell->build('/incidents/create') + [
             'pageTitle' => 'Nowy protest — ApexSteward',
-            'form' => $this->demo->reportForm(),
+            'form' => $form,
+            'old' => $old,
+            'errors' => $errors,
         ]);
+    }
+
+    /** @return array<string, string> */
+    private function oldInput(Request $request): array
+    {
+        $old = [];
+        foreach (self::FORM_FIELDS as $field) {
+            $value = $request->getParsedBody($field, '');
+            $old[$field] = is_string($value) ? $value : '';
+        }
+
+        return $old;
+    }
+
+    private function command(Request $request): ReportIncidentCommand
+    {
+        $input = $this->oldInput($request);
+
+        return new ReportIncidentCommand(
+            $this->positiveInt($input['grand_prix_id']),
+            $this->positiveInt($input['lap_number']),
+            $this->positiveInt($input['accused_driver_id']),
+            $input['affected_driver_id'] === '' ? null : $this->positiveInt($input['affected_driver_id']),
+            $this->positiveInt($input['infringement_article_id']),
+            trim($input['description']),
+            $request->getFile('evidence'),
+        );
+    }
+
+    /** 0 when the value is not a positive integer (the service rejects it like an unknown id). */
+    private function positiveInt(string $value): int
+    {
+        return ctype_digit($value) && strlen($value) < 10 ? (int) $value : 0;
     }
 }

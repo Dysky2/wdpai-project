@@ -35,7 +35,7 @@ return static function (Router $router, Container $container): void {
     $router->get('/incidents', IncidentController::class, 'index', $auth);
     // Static /incidents/create must be registered before /incidents/{id}.
     $router->get('/incidents/create', IncidentController::class, 'create', $principal);
-    $router->post('/incidents', IncidentController::class, 'create', $principal);
+    $router->post('/incidents', IncidentController::class, 'store', $principal);
     $router->get('/incidents/{id}', IncidentController::class, 'show', $auth);
 
     $router->get('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $steward);
