@@ -11,6 +11,7 @@ use App\Core\TransactionRunnerInterface;
 use App\Http\Router;
 use App\Http\Session;
 use App\Service\AuthService;
+use App\Service\Upload\UploadService;
 use App\View\ViewHelper;
 use App\Repository\DriverRepositoryInterface;
 use App\Repository\EvidenceRepositoryInterface;
@@ -59,6 +60,11 @@ $container->singleton(ViewHelper::class, static fn (Container $c): ViewHelper =>
 $container->singleton(
     AuthService::class,
     static fn (Container $c): AuthService => new AuthService($c->get(UserRepositoryInterface::class), $c->get(Session::class)),
+);
+
+$container->singleton(
+    UploadService::class,
+    static fn (): UploadService => new UploadService(dirname(__DIR__) . '/public/uploads'),
 );
 
 $container->singleton(Router::class, static fn (Container $c): Router => new Router($c));
