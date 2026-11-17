@@ -1,4 +1,5 @@
 import { ApiError, request } from './api.js';
+import { confirmDialog } from './modal.js';
 
 const buttons = [...document.querySelectorAll('[data-incident-action]')];
 const errorBox = document.querySelector('[data-incident-error]');
@@ -17,50 +18,6 @@ function showError(message) {
     }
     errorBox.textContent = message ?? '';
     errorBox.hidden = !message;
-}
-
-/** Natywny <dialog>: fokus w środku, Escape zamyka, fokus wraca do przycisku. */
-function confirmDialog(message, trigger) {
-    return new Promise((resolve) => {
-        const dialog = document.createElement('dialog');
-        dialog.className = 'card';
-        dialog.setAttribute('aria-labelledby', 'confirm-title');
-
-        const title = document.createElement('h2');
-        title.id = 'confirm-title';
-        title.className = 'card__title';
-        title.textContent = message;
-
-        const cancel = document.createElement('button');
-        cancel.type = 'button';
-        cancel.className = 'button button--secondary';
-        cancel.textContent = 'Anuluj';
-
-        const ok = document.createElement('button');
-        ok.type = 'button';
-        ok.className = 'button';
-        ok.textContent = 'Potwierdź';
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        actions.append(cancel, ok);
-        dialog.append(title, actions);
-        document.body.append(dialog);
-
-        let answer = false;
-        cancel.addEventListener('click', () => dialog.close());
-        ok.addEventListener('click', () => {
-            answer = true;
-            dialog.close();
-        });
-        dialog.addEventListener('close', () => {
-            dialog.remove();
-            trigger.focus();
-            resolve(answer);
-        });
-        dialog.showModal();
-        cancel.focus();
-    });
 }
 
 function applyStatus(data) {

@@ -278,3 +278,6 @@
     .table--standings .cell-progress { grid-area: progress; }
     .table--standings .cell-expiry { grid-area: expiry; }
 }
+
+.points-stepper { display: inline-flex; gap: 8px; }
+.dropzone__preview { margin-top: 8px; border-radius: var(--radius); }
