@@ -233,7 +233,8 @@
 .dropzone:hover { border-color: var(--accent); }
 .dropzone__title { font-weight: 600; }
 .dropzone__text { color: var(--text-muted); font-size: 0.8rem; }
-.visually-hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.form-field { position: relative; }
+.visually-hidden-input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .form-field:has(.visually-hidden-input:focus-visible) .dropzone { border-color: var(--accent); box-shadow: var(--focus-ring); }
 .form-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 8px; }
 .form-actions--end { justify-content: flex-end; }
@@ -253,7 +254,10 @@
     .form-actions .button { width: 100%; }
     .points-row { flex-direction: column; align-items: flex-start; }
 
-    /* Table rows become cards */
+}
+
+/* Tables become cards on tablet and phone (wide columns do not fit under 1024 px) */
+@media (max-width: 1023px) {
     .table--cards, .table--cards tbody, .table--cards tr, .table--cards td, .table--cards th.cell-name { display: block; }
     .table--cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
     .table--cards tbody tr { display: grid; gap: 8px 12px; padding: 16px; border-bottom: 1px solid var(--border); align-items: center; }
@@ -268,7 +272,10 @@
     .table--incidents .cell-action { grid-area: action; }
     .table--incidents .cell-action .button { width: 100%; }
 
-    .table--standings tbody tr { grid-template-columns: auto auto 1fr auto; grid-template-areas: "pos car name status" "team team team team" "points progress progress progress" "expiry expiry expiry expiry"; }
+    .table--standings tbody tr { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: "pos car name status" "team team team team" "points points progress progress" "expiry expiry expiry expiry"; }
+    .table--standings .cell-points { white-space: nowrap; }
+    .table--standings .cell-status { min-width: 0; }
+    .table--standings .cell-status .badge, .table--standings .cell-status .status-badge { white-space: normal; text-align: center; }
     .table--standings .cell-pos { grid-area: pos; }
     .table--standings .cell-car { grid-area: car; }
     .table--standings .cell-name { grid-area: name; }
