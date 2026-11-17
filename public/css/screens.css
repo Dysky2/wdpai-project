@@ -5,7 +5,7 @@
 
 .text-muted { color: var(--text-muted); }
 .accent-text { color: var(--accent-soft); font-size: 0.85rem; }
-.required { color: var(--accent); font-size: 0.7rem; font-weight: 400; text-transform: uppercase; }
+.required { color: var(--accent-text); font-size: 0.7rem; font-weight: 400; text-transform: uppercase; }
 
 .page-header {
     display: flex;
