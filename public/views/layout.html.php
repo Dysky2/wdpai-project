@@ -3,7 +3,7 @@ $navItems ??= [];
 $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : ''));
 ?>
 <!doctype html>
-<html lang="pl">
+<html lang="<?= $view->e($view->lang()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,11 +30,11 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
                 : (systemPrefersDark ? 'dark' : 'light');
         })();
     </script>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/screens.css">
+    <link rel="stylesheet" href="<?= $view->e($view->asset('css/style.css')) ?>">
+    <link rel="stylesheet" href="<?= $view->e($view->asset('css/screens.css')) ?>">
 </head>
 <body<?= $bodyClasses !== '' ? ' class="' . htmlspecialchars($bodyClasses, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
-    <a class="skip-link" href="#main">Przejdź do treści</a>
+    <a class="skip-link" href="#main"><?= $view->e($view->t('a11y.skip_to_content')) ?></a>
 
     <?php require __DIR__ . '/partials/header.html.php'; ?>
     <?php require __DIR__ . '/partials/flash.html.php'; ?>
@@ -46,7 +46,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <?php require __DIR__ . '/partials/footer.html.php'; ?>
     <?php require __DIR__ . '/partials/tabbar.html.php'; ?>
 
-    <script src="/js/theme.js" defer></script>
-    <script type="module" src="/js/app.js" defer></script>
+    <script src="<?= $view->e($view->asset('js/theme.js')) ?>" defer></script>
+    <script type="module" src="<?= $view->e($view->asset('js/app.js')) ?>" defer></script>
 </body>
 </html>

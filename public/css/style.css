@@ -672,3 +672,27 @@ img {
         animation: none !important;
     }
 }
+
+.lang-switch {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.lang-switch__link {
+    display: inline-grid;
+    place-items: center;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.lang-switch__link[aria-current="true"] {
+    border-color: var(--accent);
+    background: var(--surface-2);
+}

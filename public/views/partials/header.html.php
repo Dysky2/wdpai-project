@@ -11,7 +11,7 @@ $activeRoute ??= '';
 ?>
 <header class="site-header">
     <div class="site-header__inner">
-        <a class="brand" href="/" aria-label="F1 Stewards, strona główna">
+        <a class="brand" href="/" aria-label="<?= $view->e($view->t('header.home')) ?>">
             <span class="brand__accent" aria-hidden="true"></span>
             <span class="brand__text">
                 <strong>F1 STEWARDS</strong>
@@ -20,7 +20,7 @@ $activeRoute ??= '';
         </a>
 
         <?php if ($navItems !== []): ?>
-            <nav class="main-nav" aria-label="Główna nawigacja">
+            <nav class="main-nav" aria-label="<?= $view->e($view->t('nav.main')) ?>">
                 <ul class="main-nav__list">
                     <?php foreach ($navItems as $item): ?>
                         <li>
@@ -33,16 +33,16 @@ $activeRoute ??= '';
             </nav>
         <?php endif; ?>
 
-        <div class="site-header__tools">
+        <div class="site-header__tools"><nav class="lang-switch" aria-label="<?= $view->e($view->t('header.language')) ?>"><?php foreach (['pl', 'en'] as $code): ?><a class="lang-switch__link" href="/lang/<?= $code ?>" hreflang="<?= $code ?>" lang="<?= $code ?>"<?= $view->lang() === $code ? ' aria-current="true"' : '' ?>><?= strtoupper($code) ?></a><?php endforeach; ?></nav>
             <?php if ($currentUser !== null): ?>
                 <span class="user-chip"><?= htmlspecialchars($currentUser['roleLabel'] . ' (' . $currentUser['name'] . ')', ENT_QUOTES, 'UTF-8') ?></span>
                 <form action="/logout" method="post">
                     <?= $view->csrfField() ?>
-                    <button class="link-button" type="submit">Wyloguj</button>
+                    <button class="link-button" type="submit"><?= $view->e($view->t('header.logout')) ?></button>
                 </form>
                 <span class="avatar" aria-hidden="true"><?= htmlspecialchars($currentUser['initial'], ENT_QUOTES, 'UTF-8') ?></span>
             <?php endif; ?>
-            <button class="theme-toggle" type="button" aria-label="Ciemny motyw" aria-pressed="false" title="Zmień motyw">
+            <button class="theme-toggle" type="button" aria-label="<?= $view->e($view->t('header.theme_dark')) ?>" aria-pressed="false" title="<?= $view->e($view->t('header.theme_toggle')) ?>">
                 <i aria-hidden="true">☾</i>
             </button>
         </div>
