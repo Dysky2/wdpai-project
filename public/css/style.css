@@ -151,6 +151,10 @@ img {
     top: 8px;
 }
 
+#main:focus {
+    outline: none;
+}
+
 .eyebrow {
     display: inline-flex;
     align-items: center;

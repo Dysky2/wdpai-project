@@ -39,7 +39,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <?php require __DIR__ . '/partials/header.html.php'; ?>
     <?php require __DIR__ . '/partials/flash.html.php'; ?>
 
-    <main class="page<?= !empty($pageClass) ? ' ' . htmlspecialchars((string) $pageClass, ENT_QUOTES, 'UTF-8') : '' ?>" id="main">
+    <main class="page<?= !empty($pageClass) ? ' ' . htmlspecialchars((string) $pageClass, ENT_QUOTES, 'UTF-8') : '' ?>" id="main" tabindex="-1">
         <?= $content ?>
     </main>
 
