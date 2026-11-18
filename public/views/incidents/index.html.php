@@ -104,7 +104,7 @@
         </table>
 
         <div class="table-footer">
-            <p data-incidents-summary>Pokazano <?= count($rows) ?> z <?= (int) $total ?> incydentów</p>
+            <p data-incidents-summary role="status">Pokazano <?= count($rows) ?> z <?= (int) $total ?> incydentów</p>
             <div data-incidents-pager>
                 <?php
                 $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query, 'gp' => $gpValue], 'page' => $page, 'pages' => $pages];

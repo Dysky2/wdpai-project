@@ -163,6 +163,14 @@ Nawigację i dane użytkownika widok dostaje jako zmienne `$navItems` i `$curren
 
 Styl (`public/css/style.css`, bez stylów inline) opiera się na zmiennych CSS: kolory, statusy spraw (`--st-*`), typografia, promień i odstępy. Motyw jasny jest w `:root`, ciemny w `[data-theme="dark"]`; blokujący skrypt w `<head>` ustawia `data-theme` przed pierwszym renderem (brak FOUC). Komponenty: `.button`, `.card`, `.badge--*`, `.table`, `.form-field`, `.alert`. Układ jest responsywny: pasek górny od 768 px, dolny pasek zakładek poniżej.
 
+### Dostępność (WCAG 2.1 AA)
+
+Audyt ręczny kodu (2026-11-18): klawiatura (link „Przejdź do treści” z celem `#main[tabindex=-1]`, natywny `<dialog>` z Escape i powrotem fokusu), widoczny fokus (`:focus-visible`, ring na polach formularzy i polu uploadu), każde pole z `<label for>`, `aria-invalid`/`aria-describedby` dla błędów, `alt` dowodu i `aria-label` na logo, tabele z `<caption>` i `scope`, regiony `role="status"` dla wyników filtrowania, `prefers-reduced-motion`. Przełącznik motywu ma stałą etykietę i stan w `aria-pressed`.
+
+Kontrast (obliczony wg WCAG, min. 4.5:1): tekst 16.8:1 (jasny) / 15.2:1 (ciemny), tekst pomocniczy 5.7–6.7:1 / 5.5–6.6:1, przycisk główny 4.97:1, odznaki statusów 6.3–8.4:1 (jasny) / 7.2–8.5:1 (ciemny), tekst akcentowy 4.6:1 / 5.6:1.
+
+> Raport Lighthouse (wynik, data, zrzut) zostanie dopisany po uruchomieniu audytu na działającej aplikacji.
+
 ---
 
 ## Baza danych

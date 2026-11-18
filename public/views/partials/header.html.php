@@ -42,7 +42,7 @@ $activeRoute ??= '';
                 </form>
                 <span class="avatar" aria-hidden="true"><?= htmlspecialchars($currentUser['initial'], ENT_QUOTES, 'UTF-8') ?></span>
             <?php endif; ?>
-            <button class="theme-toggle" type="button" aria-label="Włącz ciemny motyw" aria-pressed="false" title="Zmień motyw">
+            <button class="theme-toggle" type="button" aria-label="Ciemny motyw" aria-pressed="false" title="Zmień motyw">
                 <i aria-hidden="true">☾</i>
             </button>
         </div>

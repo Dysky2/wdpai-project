@@ -33,10 +33,7 @@ function syncThemeToggle() {
 
     const isDark = getCurrentTheme() === 'dark';
     themeToggle.setAttribute('aria-pressed', String(isDark));
-    themeToggle.setAttribute(
-        'aria-label',
-        isDark ? 'Włącz jasny motyw' : 'Włącz ciemny motyw'
-    );
+    // Stała etykieta + aria-pressed: czytnik ogłasza „Ciemny motyw, przycisk przełącznika, wciśnięty”.
 
     if (themeIcon) {
         themeIcon.textContent = isDark ? '☀' : '☾';
