@@ -16,6 +16,7 @@ use App\Service\AuthService;
 use App\Service\Mail\MailerInterface;
 use App\Service\Mail\NullMailer;
 use App\Service\Upload\UploadService;
+use App\Service\TranslationService;
 use App\View\ViewHelper;
 use App\Repository\DriverRepositoryInterface;
 use App\Repository\EvidenceRepositoryInterface;
@@ -66,7 +67,11 @@ $container->singleton(StandingRepositoryInterface::class, static fn (Container $
 
 // Autowired classes are not cached by Container, so stateful services are registered as singletons.
 $container->singleton(Session::class, static fn (Container $c): Session => new Session($c->get(Config::class)));
-$container->singleton(ViewHelper::class, static fn (Container $c): ViewHelper => new ViewHelper($c->get(Session::class)));
+$container->singleton(ViewHelper::class, static fn (Container $c): ViewHelper => new ViewHelper($c->get(Session::class), $c->get(TranslationService::class)));
+$container->singleton(
+    TranslationService::class,
+    static fn (Container $c): TranslationService => new TranslationService($c->get(Session::class), $c->get(LoggerInterface::class), __DIR__ . '/lang'),
+);
 $container->singleton(
     AuthService::class,
     static fn (Container $c): AuthService => new AuthService($c->get(UserRepositoryInterface::class), $c->get(Session::class)),

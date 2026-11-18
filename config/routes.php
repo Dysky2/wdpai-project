@@ -6,6 +6,7 @@ use App\Controller\ApiIncidentController;
 use App\Controller\AuthController;
 use App\Controller\HomeController;
 use App\Controller\IncidentController;
+use App\Controller\LangController;
 use App\Controller\StandingsController;
 use App\Controller\StewardController;
 use App\Core\Container;
@@ -28,7 +29,9 @@ return static function (Router $router, Container $container): void {
 
     $router->get('/', HomeController::class, 'index');
 
-    $router->get('/login', AuthController::class, 'login');
+    $router->get('/lang/(pl|en)', LangController::class, 'switch');
+
+    $router->get('/login',AuthController::class, 'login');
     $router->post('/login', AuthController::class, 'login');
     $router->post('/logout', AuthController::class, 'logout');
 

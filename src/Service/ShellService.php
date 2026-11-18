@@ -7,7 +7,7 @@ namespace App\Service;
 /** Builds the layout shell (navigation + current user chip) from the logged-in user. */
 final class ShellService
 {
-    public function __construct(private readonly AuthService $auth)
+    public function __construct(private readonly AuthService $auth, private readonly TranslationService $translator)
     {
     }
 
@@ -20,17 +20,17 @@ final class ShellService
         }
 
         $navItems = [
-            ['label' => 'Incydenty', 'href' => '/incidents', 'route' => '/incidents'],
-            ['label' => 'Klasyfikacja', 'href' => '/standings', 'route' => '/standings'],
+            ['label' => $this->translator->t('nav.incidents'), 'href' => '/incidents', 'route' => '/incidents'],
+            ['label' => $this->translator->t('nav.standings'), 'href' => '/standings', 'route' => '/standings'],
         ];
         if ($user->isTeamPrincipal()) {
-            $navItems[] = ['label' => 'Nowy protest', 'href' => '/incidents/create', 'route' => '/incidents/create'];
+            $navItems[] = ['label' => $this->translator->t('nav.new_protest'), 'href' => '/incidents/create', 'route' => '/incidents/create'];
         }
 
         return [
             'navItems' => $navItems,
             'currentUser' => [
-                'roleLabel' => $user->isSteward() ? 'Sędzia FIA' : 'Szef zespołu',
+                'roleLabel' => $this->translator->t($user->isSteward() ? 'role.FIA_STEWARD' : 'role.TEAM_PRINCIPAL'),
                 'name' => $user->getDisplayName(),
                 'initial' => mb_strtoupper(mb_substr($user->getFirstName(), 0, 1)),
             ],

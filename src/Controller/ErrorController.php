@@ -13,32 +13,7 @@ use App\View\ViewHelper;
  */
 final class ErrorController extends AbstractController
 {
-    private const PAGES = [
-        400 => [
-            'title' => 'Nieprawidłowe żądanie',
-            'description' => 'Adres lub dane żądania są niepoprawne. Sprawdź link i spróbuj ponownie.',
-        ],
-        401 => [
-            'title' => 'Wymagane logowanie',
-            'description' => 'Aby zobaczyć tę stronę, musisz się zalogować.',
-        ],
-        403 => [
-            'title' => 'Brak dostępu',
-            'description' => 'Twoja rola nie pozwala na wykonanie tej operacji.',
-        ],
-        404 => [
-            'title' => 'Nie znaleziono strony',
-            'description' => 'Wybrana strona nie istnieje albo została przeniesiona. Wróć do centrum dowodzenia i wybierz inną sekcję.',
-        ],
-        422 => [
-            'title' => 'Nie można przetworzyć żądania',
-            'description' => 'Dane są poprawne składniowo, ale nie można ich zaakceptować.',
-        ],
-        500 => [
-            'title' => 'Błąd serwera',
-            'description' => 'Coś poszło nie tak po naszej stronie. Spróbuj ponownie za chwilę.',
-        ],
-    ];
+    private const STATUSES = [400, 401, 403, 404, 422, 500];
 
     public function __construct(ViewHelper $view, private readonly ShellService $shell)
     {
@@ -47,7 +22,8 @@ final class ErrorController extends AbstractController
 
     public function show(int $status): Response
     {
-        $page = self::PAGES[$status] ?? self::PAGES[500];
+        $status = in_array($status, self::STATUSES, true) ? $status : 500;
+        $title = $this->view->t('error.' . $status . '.title');
 
         // The error page must still render when the failure came from the session or database.
         try {
@@ -57,11 +33,11 @@ final class ErrorController extends AbstractController
         }
 
         return $this->render('error', $shell + [
-            'pageTitle' => $page['title'] . ' — ApexSteward',
+            'pageTitle' => $title . ' — ApexSteward',
             'pageClass' => 'page--centered',
             'status' => $status,
-            'title' => $page['title'],
-            'description' => $page['description'],
+            'title' => $title,
+            'description' => $this->view->t('error.' . $status . '.description'),
         ])->setStatusCode($status);
     }
 }

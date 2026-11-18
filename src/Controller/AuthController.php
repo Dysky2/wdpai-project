@@ -14,7 +14,7 @@ use App\View\ViewHelper;
  */
 final class AuthController extends AbstractController
 {
-    private const LOGIN_ERROR = 'Nieprawidłowy e-mail lub hasło';
+    private const LOGIN_ERROR = 'auth.invalid_credentials';
 
     public function __construct(ViewHelper $view, private readonly AuthService $auth)
     {
@@ -56,7 +56,7 @@ final class AuthController extends AbstractController
     private function renderLogin(string $email = '', ?string $error = null): Response
     {
         return $this->render('login', [
-            'pageTitle' => 'Logowanie — ApexSteward',
+            'pageTitle' => $this->view->t('login.page_title'),
             'pageClass' => 'page--centered',
             'old' => ['email' => $email],
             'formError' => $error,
