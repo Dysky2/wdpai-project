@@ -319,6 +319,19 @@ Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje
 
 ---
 
+## Zadanie CRON: wygaszanie punktów karnych
+
+`bin/cron.php expire-penalties` (w jednej transakcji) oznacza kary starsze niż 365 dni jako wygasłe, przelicza punkty dotkniętych kierowców i odwiesza tych, którzy spadli poniżej 12 punktów. Zadanie jest idempotentne, a wynik (liczba kar, suma punktów, odwieszeni kierowcy) trafia z czasem UTC do `storage/logs/cron.log`. Kod wyjścia: `0` OK, `1` błąd, `2` nieznane zadanie.
+
+```bash
+docker compose exec php php bin/cron.php expire-penalties
+docker compose exec php cat storage/logs/cron.log
+```
+
+Harmonogram o północy (usługa `cron` w Dockerze) jest w osobnej karcie (S6-25b).
+
+---
+
 ## Zasady developmentu
 
 - Branch dla każdego zadania (konwencja `WDP-XX`).
