@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Cli\CronRunner;
 use App\Core\ClockInterface;
 use App\Core\FileLogger;
 use App\Core\LoggerInterface;
@@ -13,6 +14,7 @@ use App\Core\TransactionRunnerInterface;
 use App\Http\Router;
 use App\Http\Session;
 use App\Service\AuthService;
+use App\Service\PenaltyService;
 use App\Service\Mail\MailerInterface;
 use App\Service\Mail\NullMailer;
 use App\Service\Upload\UploadService;
@@ -75,6 +77,14 @@ $container->singleton(
 $container->singleton(
     UploadService::class,
     static fn (): UploadService => new UploadService(dirname(__DIR__) . '/public/uploads'),
+);
+
+$container->singleton(
+    CronRunner::class,
+    static fn (Container $c): CronRunner => new CronRunner(
+        $c->get(PenaltyService::class),
+        new FileLogger(dirname(__DIR__) . '/storage/logs/cron.log'),
+    ),
 );
 
 $container->singleton(Router::class, static fn (Container $c): Router => new Router($c));
