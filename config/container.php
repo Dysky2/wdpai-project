@@ -14,7 +14,9 @@ use App\Http\Router;
 use App\Http\Session;
 use App\Service\AuthService;
 use App\Service\Mail\MailerInterface;
-use App\Service\Mail\NullMailer;
+use App\Service\Mail\MailSettings;
+use App\Service\Mail\PhpMailerMailer;
+use App\Service\Mail\RulingTemplateRenderer;
 use App\Service\Upload\UploadService;
 use App\View\ViewHelper;
 use App\Repository\DriverRepositoryInterface;
@@ -49,8 +51,15 @@ $container->singleton(Database::class, static fn (Container $c): Database => new
 $container->singleton(TransactionRunnerInterface::class, static fn (Container $c): object => $c->get(Database::class));
 $container->singleton(ClockInterface::class, static fn (): ClockInterface => new SystemClock());
 $container->singleton(LoggerInterface::class, static fn (): LoggerInterface => new FileLogger(dirname(__DIR__) . '/storage/logs/app.log'));
-// The PHPMailer implementation replaces NullMailer in card S6-26.
-$container->singleton(MailerInterface::class, static fn (): MailerInterface => new NullMailer());
+$container->singleton(MailSettings::class, static fn (Container $c): MailSettings => MailSettings::fromConfig($c->get(Config::class)));
+$container->singleton(
+    RulingTemplateRenderer::class,
+    static fn (Container $c): RulingTemplateRenderer => new RulingTemplateRenderer(
+        $c->get(ViewHelper::class),
+        dirname(__DIR__) . '/public/views/emails',
+    ),
+);
+$container->singleton(MailerInterface::class, static fn (Container $c): MailerInterface => $c->get(PhpMailerMailer::class));
 
 $container->singleton(UserRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoUserRepository::class));
 $container->singleton(TeamRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoTeamRepository::class));
