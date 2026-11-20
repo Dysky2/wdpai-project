@@ -319,6 +319,25 @@ Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje
 
 ---
 
+## Testy jednostkowe (PHPUnit)
+
+```bash
+docker compose exec php composer test
+```
+
+Testy (`tests/Unit/`, konfiguracja w `phpunit.xml`) nie wymagają bazy, sieci ani poczty: używają fałszywych zależności z `tests/Support/` (repozytoria w pamięci, `FixedClock`, `FakeTransactionRunner` z prawdziwym wycofaniem zmian w pamięci, `FakeMailer`, `FakeUploadedFileHandler`).
+
+| Plik | Co sprawdza |
+|---|---|
+| `Service/IncidentServiceTest` | poprawny protest, oskarżony z własnego zespołu, numer okrążenia, maszyna stanów statusów, sprzątanie pliku po błędzie zapisu |
+| `Service/PenaltyServiceTest` | naliczenie punktów, zawieszenie przy ≥ 12, rollback w połowie transakcji, błąd poczty nie cofa kary, wygasanie punktów po 365 dniach |
+| `Service/UploadServiceTest` | poprawny PNG/JPG, skrypt PHP jako `.jpg`, zły MIME, plik > 5 MB, losowa nazwa |
+| `Model/LicenceStatusTest` | progi 0 / 1–6 / 7–8 / 9–11 / ≥ 12 |
+| `Http/RouterTest` | `{id}` dla `abc`, `0`, `-1` → 400, brak trasy → 404, wyjątek → 500 bez szczegółów |
+| `Config/TranslationKeysTest` | identyczny zestaw kluczy w `pl.php` i `en.php` (pomijany do czasu powstania słowników) |
+
+---
+
 ## Zasady developmentu
 
 - Branch dla każdego zadania (konwencja `WDP-XX`).
