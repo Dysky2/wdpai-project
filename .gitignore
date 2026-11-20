@@ -17,3 +17,4 @@ docs/
 !/storage/logs/.gitkeep
 CLAUDE.md
 .claude/
+.phpunit.cache/
