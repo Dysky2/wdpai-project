@@ -135,7 +135,12 @@ final class Router
                 $args = array_merge($args, $parameters);
 
                 ob_start();
-                $result = $controller->{$action}(...$args);
+                try {
+                    $result = $controller->{$action}(...$args);
+                } catch (\Throwable $e) {
+                    ob_end_clean(); // never leave the buffer open when an action throws
+                    throw $e;
+                }
                 $buffered = ob_get_clean();
 
                 if ($result instanceof Response) {
