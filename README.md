@@ -48,8 +48,8 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `DB_HOST` | `db` | Nazwa usługi bazy danych w Dockerze |
 | `DB_PORT` | `5432` | Port bazy danych wewnątrz sieci Dockera |
 | `DB_NAME` | `apex_steward` | Nazwa bazy danych |
-| `DB_USER` | `docker` | Użytkownik bazy danych |
-| `DB_PASSWORD` | `docker` | Hasło użytkownika bazy danych |
+| `DB_USER` | `apex_user` (wzorzec) | Użytkownik bazy danych |
+| `DB_PASSWORD` | `change_me` (wzorzec) | Hasło użytkownika bazy danych; wymagane, ustaw własne w `.env` |
 | `POSTGRES_PORT`| `5432` | Port PostgreSQL wystawiony na maszynę hosta |
 | `SMTP_HOST` | `mailpit` | Nazwa usługi serwera SMTP dla PHPMailer |
 | `SMTP_PORT` | `1025` | Port SMTP serwera Mailpit |
@@ -315,7 +315,7 @@ Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje
 ### Dostęp do usług:
 - **Aplikacja webowa:** [http://localhost:8080](http://localhost:8080)
 - **Skrzynka pocztowa (Mailpit):** [http://localhost:8025](http://localhost:8025)
-- **PgAdmin:** [http://localhost:5050](http://localhost:5050) (login: `admin@wdpai.pl`, hasło: `admin`)
+- **PgAdmin:** [http://localhost:5050](http://localhost:5050) (login i hasło z `PGADMIN_DEFAULT_EMAIL` i `PGADMIN_DEFAULT_PASSWORD` w `.env`)
 
 ---
 
