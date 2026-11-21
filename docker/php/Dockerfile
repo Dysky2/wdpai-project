@@ -28,7 +28,7 @@ RUN apk add --no-cache \
     && apk del .build-deps
 
 RUN { \
-      echo 'memory_limit = -1'; \
+      echo 'memory_limit = 256M'; \
       echo 'upload_max_filesize = 5M'; \
       echo 'post_max_size = 8M'; \
       echo 'max_file_uploads = 20'; \
