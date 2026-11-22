@@ -42,6 +42,23 @@ final class Translator
         return $text;
     }
 
+    /**
+     * Every entry whose key starts with $prefix, in the active language (Polish fills any gap).
+     * Used to hand the texts needed by scripts to the browser.
+     *
+     * @return array<string, string>
+     */
+    public function forPrefix(string $prefix): array
+    {
+        $matching = static fn (array $dictionary): array => array_filter(
+            $dictionary,
+            static fn (string $key): bool => str_starts_with($key, $prefix),
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        return $matching($this->dictionary($this->getLang())) + $matching($this->dictionary(self::DEFAULT_LANG));
+    }
+
     /** @return array<string, string> */
     private function dictionary(string $lang): array
     {

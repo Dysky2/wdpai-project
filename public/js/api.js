@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /** Jedyne miejsce w projekcie, które woła fetch(). */
 export class ApiError extends Error {
     constructor(status, code, message) {
@@ -25,7 +26,7 @@ export async function request(method, url, { body } = {}) {
     try {
         response = await fetch(url, options);
     } catch (error) {
-        throw new ApiError(0, 'network', 'Brak połączenia z serwerem.');
+        throw new ApiError(0, 'network', t('js.api.network'));
     }
 
     let payload = null;
@@ -40,7 +41,7 @@ export async function request(method, url, { body } = {}) {
         throw new ApiError(
             response.status,
             info.code ?? 'error',
-            info.message ?? `Błąd serwera (${response.status}).`
+            info.message ?? t('js.api.server_error', { status: response.status })
         );
     }
 

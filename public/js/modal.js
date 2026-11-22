@@ -1,5 +1,6 @@
+import { t } from './i18n.js';
 /** Dostępny modal potwierdzenia oparty o natywny <dialog> (aria-modal, fokus w środku, Escape, powrót fokusu). */
-export function confirmDialog(message, trigger, { confirmLabel = 'Potwierdź', cancelLabel = 'Anuluj' } = {}) {
+export function confirmDialog(message, trigger, { confirmLabel = t('js.modal.confirm'), cancelLabel = t('js.modal.cancel') } = {}) {
     return new Promise((resolve) => {
         const dialog = document.createElement('dialog');
         dialog.className = 'card';

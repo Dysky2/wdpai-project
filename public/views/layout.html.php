@@ -46,6 +46,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <?php require __DIR__ . '/partials/footer.html.php'; ?>
     <?php require __DIR__ . '/partials/tabbar.html.php'; ?>
 
+    <script type="application/json" id="i18n-data"><?= $view->scriptMessagesJson() ?></script>
     <script src="/js/theme.js" defer></script>
     <script type="module" src="/js/app.js" defer></script>
 </body>
