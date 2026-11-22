@@ -6,6 +6,7 @@ namespace App\Http;
 
 use App\Controller\ErrorController;
 use App\Core\Container;
+use App\Core\Translator;
 use App\Exception\BadRequestException;
 use App\Exception\HttpException;
 use App\Exception\NotFoundException;
@@ -204,12 +205,25 @@ final class Router
     private function errorResponse(Request $request, int $status, string $code, string $message): Response
     {
         if (str_starts_with($request->getPath(), '/api/')) {
-            // Never leak internals of server errors to API clients.
-            $publicMessage = $status >= 500 ? 'Internal server error' : $message;
+            // Never leak internals of server errors to API clients; known statuses get a translated message.
+            $publicMessage = $this->translatedError($status) ?? ($status >= 500 ? 'Internal server error' : $message);
             return new JsonResponse(['error' => ['code' => $code, 'message' => $publicMessage]], $status);
         }
 
         return $this->resolve(ErrorController::class)->show($status);
+    }
+
+    private function translatedError(int $status): ?string
+    {
+        if ($this->container === null || !in_array($status, [400, 401, 403, 404, 422, 500], true)) {
+            return null;
+        }
+
+        try {
+            return $this->container->get(Translator::class)->translate('error.' . $status . '.message');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function executeMiddlewareChain(array $middlewares, Request $request, callable $core): Response

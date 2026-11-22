@@ -51,7 +51,7 @@
                 <?php foreach ($sanctions as $sanction): ?>
                     <label class="radio-card">
                         <input type="radio" name="sanction" value="<?= $view->e($sanction->toField()) ?>"<?= $sanction->toField() === $defaultSanction ? ' checked' : '' ?>>
-                        <span><strong><?= $view->e($sanction->getTitle()) ?></strong><small><?= $view->e($sanction->getText()) ?></small></span>
+                        <span><strong><?= $view->te($sanction->getTitleKey()) ?></strong><small><?= $view->te($sanction->getTextKey()) ?></small></span>
                     </label>
                 <?php endforeach; ?>
             </div>

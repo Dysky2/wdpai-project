@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\ClockInterface;
+use App\Core\Translator;
 use App\Model\IncidentCriteria;
 use App\Model\IncidentStatus;
 use App\Model\LicenceStatus;
@@ -17,18 +18,11 @@ final class LicenceService
 {
     public const PER_PAGE = 10;
 
-    private const LICENCE_LABELS = [
-        'SUSPENDED' => 'Zawieszony',
-        'AT_BAN_RISK' => 'Ryzyko zawieszenia',
-        'CAUTION' => 'Ostrzeżenie',
-        'ACTIVE' => 'Aktywna',
-        'CLEAN' => 'Czysta',
-    ];
-
     public function __construct(
         private readonly StandingRepositoryInterface $standings,
         private readonly IncidentListRepositoryInterface $incidents,
         private readonly ClockInterface $clock,
+        private readonly Translator $translator,
     ) {
     }
 
@@ -110,7 +104,7 @@ final class LicenceService
             'expiry' => $expiry?->setTimezone($now->getTimezone())->format('d.m.Y'),
             'daysRemaining' => $expiry === null ? null : max(0, (int) $now->diff($expiry)->format('%a')),
             'status' => $status->value,
-            'statusLabel' => self::LICENCE_LABELS[$status->value],
+            'statusLabel' => $this->translator->translate('licence_status.' . $status->value),
         ];
     }
 }

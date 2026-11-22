@@ -105,15 +105,11 @@ final class StewardController extends AbstractController
 
     private function successMessage(PenaltyOutcome $outcome): string
     {
-        $text = sprintf(
-            'Orzeczenie dla %s zostało zapisane. Aktywne punkty kierowcy: %d.',
-            $outcome->incident->getCode(),
-            $outcome->activePoints,
-        );
-        if ($outcome->suspended) {
-            $text .= ' Kierowca jest zawieszony na 1 wyścig (limit 12 punktów).';
-        }
+        $key = $outcome->suspended ? 'flash.ruling_saved_suspended' : 'flash.ruling_saved';
 
-        return $text;
+        return $this->view->t($key, [
+            'code' => $outcome->incident->getCode(),
+            'points' => $outcome->activePoints,
+        ]);
     }
 }

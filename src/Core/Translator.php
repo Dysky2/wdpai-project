@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-use App\Http\Session;
-
 /**
  * Looks up UI texts by dotted key (e.g. "nav.incidents") in config/lang/{pl,en}.php.
- * The active language comes from the session; a key missing in the active language falls back
+ * The active language comes from a LanguageProviderInterface (the session in production); a key missing in the active language falls back
  * to Polish and finally to the key itself, so a gap is visible but never fatal.
  */
 final class Translator
@@ -20,14 +18,14 @@ final class Translator
     private array $dictionaries = [];
 
     public function __construct(
-        private readonly Session $session,
+        private readonly LanguageProviderInterface $language,
         private readonly string $langDir,
     ) {
     }
 
     public function getLang(): string
     {
-        return $this->session->getLang();
+        return $this->language->getLang();
     }
 
     /** @param array<string, scalar> $params values replace ":name" placeholders */

@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http;
 
 use App\Core\Config;
+use App\Core\LanguageProviderInterface;
 
 /**
  * The only place that touches $_SESSION. Starts lazily with hardened cookie settings.
  * The session stores only user_id, lang and the CSRF token.
  */
-final class Session
+final class Session implements LanguageProviderInterface
 {
     private const KEY_USER_ID = 'user_id';
     private const KEY_LANG = 'lang';

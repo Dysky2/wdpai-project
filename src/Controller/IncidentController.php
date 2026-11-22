@@ -95,7 +95,7 @@ final class IncidentController extends AbstractController
             return $this->renderForm($user, $old, $this->messages->messages($e->getErrors()))->setStatusCode(422);
         }
 
-        $this->session->addFlash('success', 'Protest ' . $incident->getCode() . ' został zgłoszony do sędziów.');
+        $this->session->addFlash('success', $this->view->t('flash.protest_filed', ['code' => $incident->getCode()]));
 
         return Response::redirect('/incidents/' . $incident->getId());
     }

@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Core\ClockInterface;
 use App\Core\TransactionRunnerInterface;
+use App\Core\Translator;
 use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Exception\UnprocessableEntityException;
@@ -41,13 +42,6 @@ final class IncidentService
     /** Value of the "gp" query parameter that disables the Grand Prix filter. */
     public const ALL_GRANDS_PRIX = 'all';
 
-    private const STATUS_LABELS = [
-        'REPORTED' => 'Zgłoszony',
-        'UNDER_INVESTIGATION' => 'W trakcie dochodzenia',
-        'PENALTY_ISSUED' => 'Kara nałożona',
-        'NO_FURTHER_ACTION' => 'Bez dalszych działań',
-    ];
-
     private const SUMMARY_LENGTH = 110;
 
     public function __construct(
@@ -62,6 +56,7 @@ final class IncidentService
         private readonly TeamRepositoryInterface $teams,
         private readonly UploadService $uploads,
         private readonly ClockInterface $clock,
+        private readonly Translator $translator,
     ) {
     }
 
@@ -253,7 +248,7 @@ final class IncidentService
             'accused' => $detail->getAccused(),
             'affected' => $detail->getAffected(),
             'status' => $detail->getStatus()->value,
-            'statusLabel' => self::STATUS_LABELS[$detail->getStatus()->value],
+            'statusLabel' => $this->statusLabel($detail->getStatus()->value),
             'reportedAt' => $detail->getReportedAt()->setTimezone(new \DateTimeZone('UTC'))->format('d.m.Y, H:i') . ' UTC',
             'reporter' => $detail->getReporterName(),
             'reporterTeam' => $detail->getReporterTeam(),
@@ -311,7 +306,7 @@ final class IncidentService
             'id' => $incident->getId(),
             'code' => sprintf('INC-%03d', $incident->getId()),
             'status' => $target->value,
-            'statusLabel' => self::STATUS_LABELS[$target->value],
+            'statusLabel' => $this->statusLabel($target->value),
             'url' => '/incidents/' . $incident->getId(),
         ];
     }
@@ -371,7 +366,7 @@ final class IncidentService
             'title' => $incident->getArticleTitle(),
             'summary' => mb_strimwidth($incident->getDescription(), 0, self::SUMMARY_LENGTH, '…', 'UTF-8'),
             'status' => $incident->getStatus()->value,
-            'statusLabel' => self::STATUS_LABELS[$incident->getStatus()->value],
+            'statusLabel' => $this->statusLabel($incident->getStatus()->value),
             'penaltyLabel' => $this->penaltyLabel($incident->getPenaltyType(), $incident->getPenaltyValue()),
             'url' => '/incidents/' . $incident->getId(),
         ];
@@ -398,20 +393,20 @@ final class IncidentService
     {
         $counts = $this->incidents->countByStatus($criteria);
         $counts['CLOSED'] = $counts[IncidentStatus::PENALTY_ISSUED->value] + $counts[IncidentStatus::NO_FURTHER_ACTION->value];
-        $counts['TOTAL'] = array_sum(array_intersect_key($counts, self::STATUS_LABELS));
+        $counts['TOTAL'] = array_sum(array_intersect_key($counts, array_flip(array_map(static fn (IncidentStatus $status): string => $status->value, IncidentStatus::cases()))));
 
         return $counts;
     }
 
+    private function statusLabel(string $status): string
+    {
+        return $this->translator->translate('status.' . $status);
+    }
+
     private function penaltyLabel(?PenaltyType $type, ?int $value): ?string
     {
-        return match ($type) {
-            null => null,
-            PenaltyType::TIME_PENALTY => 'Kara +' . $value . ' s',
-            PenaltyType::GRID_DROP => 'Cofnięcie o ' . $value . ' poz.',
-            PenaltyType::DRIVE_THROUGH => 'Przejazd przez aleję serwisową',
-            PenaltyType::REPRIMAND => 'Nagana',
-            PenaltyType::DISQUALIFICATION => 'Dyskwalifikacja',
-        };
+        return $type === null
+            ? null
+            : $this->translator->translate('penalty_label.' . $type->value, ['value' => $value ?? 0]);
     }
 }
