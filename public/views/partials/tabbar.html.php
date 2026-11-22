@@ -4,7 +4,7 @@ $navItems ??= [];
 $activeRoute ??= '';
 ?>
 <?php if ($navItems !== []): ?>
-    <nav class="tabbar" aria-label="Nawigacja mobilna">
+    <nav class="tabbar" aria-label="<?= $view->te('nav.mobile_aria') ?>">
         <ul class="tabbar__list">
             <?php foreach ($navItems as $item): ?>
                 <li>
