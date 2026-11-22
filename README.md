@@ -123,7 +123,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | Metoda | Ścieżka | Kontroler::akcja |
 |---|---|---|
 | GET | `/` | `HomeController::index` |
-| GET | `/lang/(pl|en)` | `LanguageController::switch` (zapis języka w sesji, powrót na stronę z `Referer` tylko z tego samego hosta) |
+| GET | `/lang/(pl\|en)` | `LanguageController::switch` (zapis języka w sesji, powrót na stronę z `Referer` tylko z tego samego hosta) |
 | GET, POST | `/login` | `AuthController::login` |
 | POST | `/logout` | `AuthController::logout` |
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
