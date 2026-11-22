@@ -123,6 +123,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | Metoda | Ścieżka | Kontroler::akcja |
 |---|---|---|
 | GET | `/` | `HomeController::index` |
+| GET | `/lang/(pl|en)` | `LanguageController::switch` (zapis języka w sesji, powrót na stronę z `Referer` tylko z tego samego hosta) |
 | GET, POST | `/login` | `AuthController::login` |
 | POST | `/logout` | `AuthController::logout` |
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
@@ -162,6 +163,15 @@ Wszystkie widoki są renderowane wewnątrz `public/views/layout.html.php` (przez
 Nawigację i dane użytkownika widok dostaje jako zmienne `$navItems` i `$currentUser` (ustawi je warstwa uwierzytelniania); dla gościa pasek nawigacji się nie wyświetla.
 
 Styl (`public/css/style.css`, bez stylów inline) opiera się na zmiennych CSS: kolory, statusy spraw (`--st-*`), typografia, promień i odstępy. Motyw jasny jest w `:root`, ciemny w `[data-theme="dark"]`; blokujący skrypt w `<head>` ustawia `data-theme` przed pierwszym renderem (brak FOUC). Komponenty: `.button`, `.card`, `.badge--*`, `.table`, `.form-field`, `.alert`. Układ jest responsywny: pasek górny od 768 px, dolny pasek zakładek poniżej.
+
+### Wielojęzyczność (PL/EN, K30)
+
+Domyślny język to polski; przełącznik PL/EN w nagłówku wywołuje `GET /lang/pl` lub `/lang/en`, a wybór trafia do sesji.
+
+- Słowniki: `config/lang/pl.php` i `config/lang/en.php` (płaskie klucze kropkowe, np. `nav.incidents`, `status.REPORTED`, `validation.lap_range`). Oba pliki muszą mieć identyczny zestaw kluczy, pilnuje tego `TranslationKeysTest`.
+- Widoki: `$view->t('klucz', ['max' => 5])` i `$view->te(...)` (z escapowaniem). Brakujący klucz wraca do polskiego, a w ostateczności jest wyświetlany jako sam klucz.
+- Serwer tłumaczy też komunikaty walidacji (422), etykiety statusów i kar, komunikaty flash oraz błędy API (`error.message`).
+- Skrypty: klucze `js.*` są osadzone w stronie jako JSON (`#i18n-data`) i czytane przez `public/js/i18n.js` (`t('js.modal.confirm')`).
 
 ### Dostępność (WCAG 2.1 AA)
 
