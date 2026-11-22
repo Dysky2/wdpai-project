@@ -62,7 +62,7 @@ final class StewardController extends AbstractController
         $incident = $this->incidentService->dossier($form->getIncident());
 
         $response = $this->render('stewards/adjudicate', $this->shell->build('/incidents') + [
-            'pageTitle' => 'Orzeczenie ' . $incident['code'] . ' — ApexSteward',
+            'pageTitle' => $this->view->t('adjudicate.page_title', ['code' => $incident['code']]),
             'incident' => $incident,
             'articles' => $form->getArticles(),
             'sanctions' => $form->getSanctions(),

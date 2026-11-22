@@ -4,13 +4,37 @@ declare(strict_types=1);
 
 namespace App\View;
 
+use App\Core\Translator;
 use App\Http\Session;
 
 /** Helpers available in templates as $view. */
 final class ViewHelper
 {
-    public function __construct(private readonly Session $session)
+    public function __construct(
+        private readonly Session $session,
+        private readonly Translator $translator,
+    ) {
+    }
+
+    /** @param array<string, scalar> $params */
+    public function t(string $key, array $params = []): string
     {
+        return $this->translator->translate($key, $params);
+    }
+
+    /**
+     * Escaped translation for direct output in templates.
+     *
+     * @param array<string, scalar> $params
+     */
+    public function te(string $key, array $params = []): string
+    {
+        return $this->e($this->t($key, $params));
+    }
+
+    public function lang(): string
+    {
+        return $this->translator->getLang();
     }
 
     public function e(mixed $value): string

@@ -27,7 +27,7 @@ final class StandingsController extends AbstractController
         $table = $this->licences->table($filter, $query, (int) $this->queryString($request, 'page', '1'));
 
         return $this->render('standings/index', $this->shell->build('/standings') + [
-            'pageTitle' => 'Klasyfikacja punktów karnych — ApexSteward',
+            'pageTitle' => $this->view->t('standings.page_title'),
             'filter' => in_array($filter, ['risk', 'clean'], true) ? $filter : 'all',
             'query' => $query,
             'perPage' => LicenceService::PER_PAGE,

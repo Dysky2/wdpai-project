@@ -672,3 +672,26 @@ img {
         animation: none !important;
     }
 }
+
+.lang-switch {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.lang-switch__link {
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+.lang-switch__link:hover {
+    color: var(--accent-soft);
+}
+
+.lang-switch__link[aria-current="true"] {
+    border-color: var(--accent-soft);
+    font-weight: 700;
+}
