@@ -1,16 +1,16 @@
-<nav class="breadcrumb" aria-label="Okruszki">
-    <a href="/incidents">Incydenty</a>
+<nav class="breadcrumb" aria-label="<?= $view->te('show.breadcrumb_aria') ?>">
+    <a href="/incidents"><?= $view->te('nav.incidents') ?></a>
     <span aria-hidden="true">/</span>
     <a href="/incidents/<?= (int) $incident['id'] ?>"><?= $view->e($incident['code']) ?></a>
     <span aria-hidden="true">/</span>
-    <span aria-current="page">Orzeczenie</span>
+    <span aria-current="page"><?= $view->te('adjudicate.breadcrumb') ?></span>
 </nav>
 
 <section class="card form-card" aria-labelledby="adjudicate-heading">
     <header class="form-card__head">
         <div>
-            <h1 id="adjudicate-heading" class="card__title">Oficjalne orzeczenie sędziów</h1>
-            <p class="text-muted">Nałożenie formalnej kary za incydent <?= $view->e($incident['code']) ?> (<?= $view->e($incident['title']) ?>). Decyzja jest wiążąca zgodnie z Międzynarodowym Kodeksem Sportowym FIA.</p>
+            <h1 id="adjudicate-heading" class="card__title"><?= $view->te('adjudicate.heading') ?></h1>
+            <p class="text-muted"><?= $view->te('adjudicate.lead', ['code' => $incident['code'], 'title' => $incident['title']]) ?></p>
         </div>
     </header>
 
@@ -18,17 +18,17 @@
         <?= $view->csrfField() ?>
         <div class="form__row">
             <div class="form-field">
-                <label for="incident-code">ID incydentu</label>
-                <input type="text" id="incident-code" value="<?= $view->e($incident['code']) ?> (okr. <?= (int) $incident['lap'] ?>)" readonly>
+                <label for="incident-code"><?= $view->te('incidents.col_id') ?></label>
+                <input type="text" id="incident-code" value="<?= $view->te('adjudicate.code_lap', ['code' => $incident['code'], 'lap' => (int) $incident['lap']]) ?>" readonly>
             </div>
             <div class="form-field">
-                <label for="driver">Ukarany kierowca</label>
-                <input type="text" id="driver" value="Bolid <?= (int) $incident['accused']['number'] ?> — <?= $view->e($incident['accused']['name']) ?> (<?= $view->e($incident['accused']['team']) ?>)" readonly>
+                <label for="driver"><?= $view->te('adjudicate.penalised_driver') ?></label>
+                <input type="text" id="driver" value="<?= $view->te('driver.car', ['number' => (int) $incident['accused']['number']]) ?> — <?= $view->e($incident['accused']['name']) ?> (<?= $view->e($incident['accused']['team']) ?>)" readonly>
             </div>
         </div>
 
         <div class="form-field">
-            <label for="article_id">Przepis / artykuł naruszenia <span class="required">wymagane</span></label>
+            <label for="article_id"><?= $view->te('adjudicate.article') ?> <span class="required"><?= $view->te('adjudicate.required') ?></span></label>
             <select id="article_id" name="article_id" required>
                 <?php foreach ($articles as $article): ?>
                     <?php $preset = \App\Model\SanctionOption::forPreset($article->getDefaultPenaltyType(), $article->getDefaultSanctionValue()); ?>
@@ -42,11 +42,11 @@
             <?php if (isset($errors['article_id'])): ?>
                 <p class="form-field__error"><?= $view->e($errors['article_id']) ?></p>
             <?php endif; ?>
-            <p class="form-field__hint">Główny artykuł określający naruszenie standardów jazdy. Wybór artykułu sugeruje sankcję i punkty (można je zmienić).</p>
+            <p class="form-field__hint"><?= $view->te('adjudicate.article_hint') ?></p>
         </div>
 
         <fieldset class="fieldset">
-            <legend>Sankcja <span class="required">wybierz jedną</span></legend>
+            <legend><?= $view->te('adjudicate.sanction') ?> <span class="required"><?= $view->te('adjudicate.choose_one') ?></span></legend>
             <div class="radio-cards">
                 <?php foreach ($sanctions as $sanction): ?>
                     <label class="radio-card">
@@ -61,11 +61,11 @@
         </fieldset>
 
         <div class="form-field">
-            <label for="points">Punkty karne do naliczenia (0–3)</label>
+            <label for="points"><?= $view->te('adjudicate.points') ?></label>
             <div class="points-row">
                 <input type="number" id="points" name="points" min="0" max="3" value="<?= (int) $defaultPoints ?>" inputmode="numeric" data-current-points="<?= (int) $currentPoints ?>">
-                <p class="text-muted">Maks. 12 punktów w ciągu 12 miesięcy oznacza automatyczne zawieszenie na 1 wyścig.<br>
-                    <span class="accent-text">Obecny bilans kierowcy: <?= (int) $currentPoints ?> pkt → prognozowany: <span data-projected-points><?= (int) $projectedPoints ?></span> pkt</span></p>
+                <p class="text-muted"><?= $view->te('adjudicate.points_hint') ?><br>
+                    <span class="accent-text"><?= $view->te('adjudicate.balance_current', ['points' => (int) $currentPoints]) ?> <span data-projected-points><?= (int) $projectedPoints ?></span> <?= $view->te('adjudicate.points_unit') ?></span></p>
             </div>
             <?php if (isset($errors['points'])): ?>
                 <p class="form-field__error"><?= $view->e($errors['points']) ?></p>
@@ -73,23 +73,23 @@
         </div>
 
         <div class="form-field">
-            <label for="reason">Pisemne uzasadnienie sędziów (trafi do oficjalnego biuletynu FIA)</label>
+            <label for="reason"><?= $view->te('adjudicate.reason') ?></label>
             <textarea id="reason" name="reason" rows="6" maxlength="1000" required<?= isset($errors['reason']) ? ' aria-invalid="true" aria-describedby="reason-error"' : '' ?>><?= $view->e($old['reason'] ?? '') ?></textarea>
             <?php if (isset($errors['reason'])): ?>
                 <p class="form-field__error" id="reason-error"><?= $view->e($errors['reason']) ?></p>
             <?php endif; ?>
-            <button class="button button--secondary" type="button" data-insert-precedent hidden>Wstaw wzorcowe sformułowanie</button>
+            <button class="button button--secondary" type="button" data-insert-precedent hidden><?= $view->te('adjudicate.insert_precedent') ?></button>
         </div>
 
         <label class="check-card">
             <input type="checkbox" name="notify_team" value="1" checked>
-            <span><strong>Powiadom szefów zespołów (<?= $view->e($incident['accused']['team']) ?>, <?= $view->e($incident['reporterTeam']) ?>) natychmiast</strong>
-                <small>Wysyła e-mail z treścią orzeczenia do obu zespołów.</small></span>
+            <span><strong><?= $view->te('adjudicate.notify', ['accused' => $incident['accused']['team'], 'reporter' => $incident['reporterTeam']]) ?></strong>
+                <small><?= $view->te('adjudicate.notify_hint') ?></small></span>
         </label>
 
         <div class="form-actions">
-            <a class="button button--secondary" href="/incidents/<?= (int) $incident['id'] ?>">← Anuluj / wróć do sprawy</a>
-            <button class="button" type="submit">Zapisz i zastosuj karę</button>
+            <a class="button button--secondary" href="/incidents/<?= (int) $incident['id'] ?>">← <?= $view->te('adjudicate.cancel') ?></a>
+            <button class="button" type="submit"><?= $view->te('adjudicate.submit') ?></button>
         </div>
     </form>
 </section>
