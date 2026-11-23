@@ -25,7 +25,7 @@ Projekt uruchamia 5 współpracujących usług w dedykowanych sieciach Docker:
 
 | Usługa | Obraz / Dockerfile | Port zewnętrzny (Host) | Port wewnętrzny (Kontener) | Opis |
 |---|---|---|---|---|
-| **`server`** | `docker/nginx/Dockerfile` | `8080` (`APP_PORT`) | `80` | Serwer HTTP Nginx, punkt wejścia do aplikacji |
+| **`server`** | `docker/nginx/Dockerfile` | `8080` (`APP_PORT`, przekierowanie 301), `8443` (`APP_HTTPS_PORT`) | `80`, `443` | Nginx: HTTP tylko przekierowuje na HTTPS; certyfikat self-signed generowany przy budowie obrazu |
 | **`php`** | `docker/php/Dockerfile` | - | `9000` | Interpreter PHP 8.3-FPM z rozszerzeniami PDO PgSQL |
 | **`db`** | `docker/db/Dockerfile` (Postgres 16) | `5432` (`POSTGRES_PORT`) | `5432` | Baza danych PostgreSQL z wolumenem `pgdata` |
 | **`mailpit`** | `axllent/mailpit:latest` | `8025` (`MAILPIT_PORT`)<br>`1025` (`SMTP_PORT`) | `8025`<br>`1025` | Web UI podglądu poczty oraz serwer SMTP |
@@ -44,7 +44,8 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `APP_NAME` | `ApexSteward` | Nazwa aplikacji |
 | `APP_ENV` | `local` | Środowisko uruchomieniowe (`local`, `production`) |
 | `APP_PORT` | `8080` | Port HTTP serwera Nginx na hoście |
-| `APP_URL` | `http://localhost:8080` | Pełny adres bazowy aplikacji |
+| `APP_HTTPS_PORT` | `8443` | Port HTTPS serwera Nginx na hoście (cel przekierowania z HTTP) |
+| `APP_URL` | `https://localhost:8443` | Pełny adres bazowy aplikacji |
 | `DB_HOST` | `db` | Nazwa usługi bazy danych w Dockerze |
 | `DB_PORT` | `5432` | Port bazy danych wewnątrz sieci Dockera |
 | `DB_NAME` | `apex_steward` | Nazwa bazy danych |
@@ -323,7 +324,7 @@ docker compose up --build -d
 Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje `composer install` przy buildzie, a entrypoint (`docker/php/docker-entrypoint.sh`) powtarza to przy starcie kontenera, gdy brakuje `vendor/autoload.php` lub zmienił się `composer.lock` (bind mount `.:/app` przykrywa katalog z obrazu). Ręczna instalacja nie jest potrzebna.
 
 ### Dostęp do usług:
-- **Aplikacja webowa:** [http://localhost:8080](http://localhost:8080)
+- **Aplikacja webowa:** [https://localhost:8443](https://localhost:8443) (certyfikat self-signed: przeglądarka pokaże ostrzeżenie, wybierz „Zaawansowane → Przejdź”; `http://localhost:8080` przekierowuje na HTTPS)
 - **Skrzynka pocztowa (Mailpit):** [http://localhost:8025](http://localhost:8025)
 - **PgAdmin:** [http://localhost:5050](http://localhost:5050) (login i hasło z `PGADMIN_DEFAULT_EMAIL` i `PGADMIN_DEFAULT_PASSWORD` w `.env`)
 
@@ -375,7 +376,7 @@ Test harmonogramu bez czekania do północy: w `docker/cron/crontab` zamień `0 
 
 ## Bezpieczeństwo (Security Bingo)
 
-Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Test” opisuje sprawdzenie wykonane na działającej aplikacji (`curl`, `http://localhost:8080`).
+Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Test” opisuje sprawdzenie wykonane na działającej aplikacji (`curl -k`, `https://localhost:8443`).
 
 | # | Zabezpieczenie | Dowód w kodzie | Test |
 |---|---|---|---|
@@ -388,7 +389,8 @@ Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Tes
 | 7 | Autoryzacja: role | `src/Middleware/RoleMiddleware.php:30-35` (`ForbiddenException`) | `TEAM_PRINCIPAL` na `GET /stewards/adjudicate/1` → 403; na `POST /api/incidents/1/investigate` → 403 JSON |
 | 8 | Autoryzacja: własność zasobu | `src/Service/IncidentService.php:217-224` (`getForUser`: 404 gdy brak, 403 gdy sprawa obcego zespołu) | szef Mercedesa: `/incidents/1`, `/5`, `/12` → 403 (cudze sprawy), nieistniejące `/20`, `/27` → 404 |
 | 9 | CSRF: token w sesji + `hash_equals`, każdy POST | `src/Http/Session.php:93` (`bin2hex(random_bytes(32))`), `src/Middleware/CsrfMiddleware.php:23` (tylko metody bezpieczne pomijane), `:28` (`hash_equals`); globalnie w `config/routes.php:22`; formularze: `src/View/ViewHelper.php:65` (`csrfField`); Fetch: `public/views/layout.html.php:10` + `public/js/api.js:13-17` (`X-CSRF-Token`) | `POST /login` bez tokenu → 403; `POST /api/incidents/1/investigate` bez nagłówka → 403 JSON |
-| 10 | Sesja: flagi ciasteczka | `src/Http/Session.php:124` (`HttpOnly`), `:125` (`SameSite=Lax`), `:123` (`Secure` gdy `APP_ENV=production`), `:31` (`use_strict_mode`) | `Set-Cookie: PHPSESSID=...; path=/; HttpOnly; SameSite=Lax` (lokalnie bez `Secure`, bo HTTP) |
+| 10 | Sesja: flagi ciasteczka | `src/Http/Session.php:131` (`Secure` gdy `APP_ENV=production` lub żądanie przyszło przez TLS: `HTTPS=on` z nginx), `:132` (`HttpOnly`), `:133` (`SameSite=Lax`), `use_strict_mode` | `curl -skI https://localhost:8443/login` → `Set-Cookie: PHPSESSID=...; path=/; secure; HttpOnly; SameSite=Lax` |
+| 21 | HTTPS: port 443, certyfikat, przekierowanie HTTP → HTTPS | `docker/nginx/nginx.conf` (serwer `:80` zwraca 301, serwer `:443 ssl`, TLS 1.2/1.3, `fastcgi_param HTTPS on`), `docker/nginx/Dockerfile` (certyfikat self-signed generowany przy budowie, poza gitem), `docker-compose.yaml` (`APP_HTTPS_PORT`) | `curl -sI http://localhost:8080/login` → `301`, `Location: https://localhost:8443/login`; logowanie przez HTTPS → `302 /incidents` |
 | 11 | Sesja: regeneracja ID po logowaniu | `src/Http/Session.php:84` (`session_regenerate_id(true)`) | – |
 | 12 | Strony chronione bez cache | `src/Middleware/AuthMiddleware.php:29` (`Cache-Control: no-store, private`) | `GET /incidents` (zalogowany) → nagłówek `Cache-Control: no-store, private` |
 | 13 | Upload: prawdziwy MIME, limit, losowa nazwa | `src/Service/Upload/UploadService.php:13` (`MAX_BYTES` = 5 MB), `:55` (`finfo`), `:60` (`getimagesize`, obraz musi się zdekodować), `:17` (lista dozwolonych typów jpg/png), `:70` (`bin2hex(random_bytes(16))`); limit transportowy `docker/nginx/nginx.conf:8` | `tests/Unit/Service/UploadServiceTest.php` |

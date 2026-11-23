@@ -5,6 +5,9 @@ services:
       dockerfile: docker/nginx/Dockerfile
     ports:
       - "${APP_PORT:-8080}:80"
+      - "${APP_HTTPS_PORT:-8443}:443"
+    environment:
+      HTTPS_PORT: ${APP_HTTPS_PORT:-8443}
     volumes:
       - .:/app
     depends_on:

@@ -114,13 +114,21 @@ final class Session implements LanguageProviderInterface
         session_destroy();
     }
 
+    /** Nginx marks requests received on the TLS listener with HTTPS=on (fastcgi_param). */
+    private function isHttpsRequest(): bool
+    {
+        $https = $_SERVER['HTTPS'] ?? '';
+
+        return is_string($https) && $https !== '' && strtolower($https) !== 'off';
+    }
+
     /** @return array{lifetime: int, path: string, secure: bool, httponly: bool, samesite: string} */
     private function cookieParams(): array
     {
         return [
             'lifetime' => 0,
             'path' => '/',
-            'secure' => $this->config->isProduction(),
+            'secure' => $this->config->isProduction() || $this->isHttpsRequest(),
             'httponly' => true,
             'samesite' => 'Lax',
         ];
