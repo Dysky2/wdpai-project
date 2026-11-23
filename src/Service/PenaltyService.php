@@ -99,6 +99,38 @@ final class PenaltyService
         return new PenaltyOutcome($incident, $penalty, $points, $suspended, $mailSent);
     }
 
+    /**
+     * CRON: one transaction flags every penalty past its 365 days and re-evaluates the suspension of the
+     * drivers it touched. Idempotent: a second run finds nothing to expire.
+     */
+    public function expireOutdatedPenalties(): ExpirationResult
+    {
+        return $this->transactions->transactional(function (): ExpirationResult {
+            $expired = $this->penalties->expireOutdated($this->clock->now());
+
+            $points = 0;
+            $driverIds = [];
+            foreach ($expired as $row) {
+                $points += $row['points'];
+                $driverIds[$row['driverId']] = true;
+            }
+
+            $reinstated = [];
+            foreach (array_keys($driverIds) as $driverId) {
+                $driver = $this->drivers->lockById($driverId);
+                if ($driver === null || !$driver->isSuspended()) {
+                    continue;
+                }
+                if (!$this->policy->shouldSuspend($this->penalties->sumActivePoints($driverId))) {
+                    $this->drivers->updateSuspension($driverId, false);
+                    $reinstated[] = $driver->getCode();
+                }
+            }
+
+            return new ExpirationResult(count($expired), $points, $reinstated);
+        });
+    }
+
     /** A mail failure is logged and reported as "not sent"; the committed ruling stays. */
     private function notify(Penalty $penalty): bool
     {
