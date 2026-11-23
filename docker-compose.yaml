@@ -25,6 +25,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - pg-network
 
@@ -32,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    environment:
+    environment: &app-env
       APP_ENV: ${APP_ENV:-local}
       DB_HOST: db
       DB_PORT: 5432
@@ -45,6 +50,27 @@ services:
       - .:/app
     depends_on:
       - db
+    networks:
+      - app-network
+      - pg-network
+
+  cron:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    # crond does not inherit the container environment, so dump DB_*, APP_* and SMTP_* to /etc/cron.env first.
+    command:
+      - sh
+      - -c
+      - "env | grep -E '^(DB_|APP_|SMTP_)' | sed \"s/^\\([^=]*\\)=\\(.*\\)$$/export \\1='\\2'/\" > /etc/cron.env && exec crond -f -l 8"
+    environment: *app-env
+    volumes:
+      - .:/app
+      - ./docker/cron/crontab:/etc/crontabs/root:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - app-network
       - pg-network
