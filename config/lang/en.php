@@ -60,6 +60,7 @@ return [
     'login.password_placeholder' => 'Enter your password',
     'login.submit' => 'Log in',
     'login.invalid_credentials' => 'Invalid e-mail or password',
+    'login.invalid_email' => 'Enter a valid e-mail address.',
 
     // Statuses
     'status.REPORTED' => 'Reported',

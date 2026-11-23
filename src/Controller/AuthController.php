@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Http\Request;
 use App\Http\Response;
 use App\Service\AuthService;
+use App\Service\LoginValidator;
 use App\View\ViewHelper;
 
 /**
@@ -14,8 +15,11 @@ use App\View\ViewHelper;
  */
 final class AuthController extends AbstractController
 {
-    public function __construct(ViewHelper $view, private readonly AuthService $auth)
-    {
+    public function __construct(
+        ViewHelper $view,
+        private readonly AuthService $auth,
+        private readonly LoginValidator $validator,
+    ) {
         parent::__construct($view);
     }
 
@@ -34,6 +38,13 @@ final class AuthController extends AbstractController
         $email = is_string($email) ? $email : '';
         $password = is_string($password) ? $password : '';
 
+        $errorKeys = $this->validator->validate($email, $password);
+        if ($errorKeys !== []) {
+            $errors = array_map(fn (string $key): string => $this->view->t($key), $errorKeys);
+
+            return $this->renderLogin($email, null, $errors)->setStatusCode(422);
+        }
+
         $user = $this->auth->attempt($email, $password);
         if ($user === null) {
             return $this->renderLogin($email, $this->view->t('login.invalid_credentials'))->setStatusCode(422);
@@ -51,13 +62,17 @@ final class AuthController extends AbstractController
         return Response::redirect('/login');
     }
 
-    private function renderLogin(string $email = '', ?string $error = null): Response
+    /**
+     * @param array<string, string> $errors field => message
+     */
+    private function renderLogin(string $email = '', ?string $error = null, array $errors = []): Response
     {
         return $this->render('login', [
             'pageTitle' => $this->view->t('login.page_title'),
             'pageClass' => 'page--centered',
             'old' => ['email' => $email],
             'formError' => $error,
+            'errors' => $errors,
         ]);
     }
 }
