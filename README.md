@@ -373,6 +373,33 @@ Test harmonogramu bez czekania do północy: w `docker/cron/crontab` zamień `0 
 
 ---
 
+## Bezpieczeństwo (Security Bingo)
+
+Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Test” opisuje sprawdzenie wykonane na działającej aplikacji (`curl`, `http://localhost:8080`).
+
+| # | Zabezpieczenie | Dowód w kodzie | Test |
+|---|---|---|---|
+| 1 | Hasła: Argon2id + `password_verify` | `src/Service/AuthService.php:30` (`password_verify`), `:36-37` (`password_hash(..., PASSWORD_ARGON2ID)` przy rehashu); hashe w `db/seed.sql:66`, `:84` | logowanie kontem demo działa (302 → `/incidents`) |
+| 2 | Jeden komunikat błędu logowania (brak enumeracji kont) | `src/Controller/AuthController.php:39` (jeden klucz `login.invalid_credentials`); `src/Service/AuthService.php:29` (fałszywy hash dla nieistniejącego e-maila, stały czas) | znany i nieznany e-mail dają to samo: 422 „Nieprawidłowy e-mail lub hasło” |
+| 3 | SQL Injection: wyłącznie `prepare()` + `execute()` | `src/Core/Database.php:48-50` (`run()` to jedyne wejście do SQL, `prepare($sql)` z parametrami); w `src/` brak `->query(` i `->exec(` | `git grep -nE "->(query\|exec)\("  src` nie zwraca nic |
+| 4 | Walidacja po stronie serwera | `src/Service/IncidentService.php:151-194` (`validateReport`: numer okrążenia, kierowcy, długość opisu); `src/Service/PenaltyService.php:148-175` (`validate`: artykuł, sankcja, punkty 0–3); `src/Service/Upload/UploadService.php:51-70` | `GET /incidents/abc` → 400 |
+| 5 | XSS: escape na wyjściu | `src/View/ViewHelper.php:51` (`e()`: `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')`); widoki w `public/views/` wypisują dane przez `$view->e()` lub bezpośrednio `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')` (partiale `flash`, `form-field`); jedyne surowe wyjścia to `$content` (gotowy widok) i `src/View/ViewHelper.php:36-41` (JSON w `<script>` z `JSON_HEX_TAG\|JSON_HEX_AMP\|JSON_HEX_APOS\|JSON_HEX_QUOT`) | przegląd `grep -rnE '<\?=' public/views` – żadne dane użytkownika nie są wypisywane bez escapowania |
+| 6 | Autoryzacja po stronie serwera: uwierzytelnienie | `src/Middleware/AuthMiddleware.php:19`; trasy w `config/routes.php` (`$auth`, `$principal`, `$steward`) | `GET /api/incidents` bez sesji → 401 JSON |
+| 7 | Autoryzacja: role | `src/Middleware/RoleMiddleware.php:30-35` (`ForbiddenException`) | `TEAM_PRINCIPAL` na `GET /stewards/adjudicate/1` → 403; na `POST /api/incidents/1/investigate` → 403 JSON |
+| 8 | Autoryzacja: własność zasobu | `src/Service/IncidentService.php:217-224` (`getForUser`: 404 gdy brak, 403 gdy sprawa obcego zespołu) | szef Mercedesa: `/incidents/1`, `/5`, `/12` → 403 (cudze sprawy), nieistniejące `/20`, `/27` → 404 |
+| 9 | CSRF: token w sesji + `hash_equals`, każdy POST | `src/Http/Session.php:93` (`bin2hex(random_bytes(32))`), `src/Middleware/CsrfMiddleware.php:23` (tylko metody bezpieczne pomijane), `:28` (`hash_equals`); globalnie w `config/routes.php:22`; formularze: `src/View/ViewHelper.php:65` (`csrfField`); Fetch: `public/views/layout.html.php:10` + `public/js/api.js:13-17` (`X-CSRF-Token`) | `POST /login` bez tokenu → 403; `POST /api/incidents/1/investigate` bez nagłówka → 403 JSON |
+| 10 | Sesja: flagi ciasteczka | `src/Http/Session.php:124` (`HttpOnly`), `:125` (`SameSite=Lax`), `:123` (`Secure` gdy `APP_ENV=production`), `:31` (`use_strict_mode`) | `Set-Cookie: PHPSESSID=...; path=/; HttpOnly; SameSite=Lax` (lokalnie bez `Secure`, bo HTTP) |
+| 11 | Sesja: regeneracja ID po logowaniu | `src/Http/Session.php:84` (`session_regenerate_id(true)`) | – |
+| 12 | Strony chronione bez cache | `src/Middleware/AuthMiddleware.php:29` (`Cache-Control: no-store, private`) | `GET /incidents` (zalogowany) → nagłówek `Cache-Control: no-store, private` |
+| 13 | Upload: prawdziwy MIME, limit, losowa nazwa | `src/Service/Upload/UploadService.php:13` (`MAX_BYTES` = 5 MB), `:55` (`finfo`), `:60` (`getimagesize`, obraz musi się zdekodować), `:17` (lista dozwolonych typów jpg/png), `:70` (`bin2hex(random_bytes(16))`); limit transportowy `docker/nginx/nginx.conf:8` | `tests/Unit/Service/UploadServiceTest.php` |
+| 14 | Upload: brak wykonywania skryptów w `/uploads/` | `docker/nginx/nginx.conf:15-23` (każdy `*.php` w `/uploads/` → 404, `default_type application/octet-stream`, `X-Content-Type-Options: nosniff`) | `GET /uploads/x.php` → 404 |
+| 15 | Nginx: do PHP-FPM trafia tylko `/index.php` | `docker/nginx/nginx.conf:26-30` (`location = /index.php`), `:33-35` (każdy inny `*.php` → 404, w tym `*.html.php`) | `/views/login.html.php`, `/views/layout.html.php` → 404 |
+| 16 | Brak wycieku informacji o błędach | `docker/php/Dockerfile` (`app.ini`: `display_errors = Off`, `log_errors = On`, `expose_php = Off`) | `php -i` w kontenerze pokazuje `display_errors => Off`; brak nagłówka `X-Powered-By` |
+| 17 | Sekrety poza repozytorium | `.gitignore` (`.env`), `.env.example` tylko ze wzorcami, `docker-compose.yaml` (`${DB_PASSWORD:?set DB_PASSWORD in .env}`) | `git ls-files \| grep "^\.env$"` → pusto; `git grep` po `password\|secret\|api_key` w kodzie nie znajduje haseł |
+| 18 | Brak otwartego przekierowania | `src/Controller/LanguageController.php:27-51` (`safeReturnPath`: tylko ścieżka i query z tego samego hosta) | – |
+
+Znane ograniczenia: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `APP_ENV=production` (karta deployu), a aplikacja nie ma limitu prób logowania (poza zakresem kryterium).
+
 ## Zasady developmentu
 
 - Branch dla każdego zadania (konwencja `WDP-XX`).

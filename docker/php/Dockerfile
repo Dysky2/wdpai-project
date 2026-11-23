@@ -32,6 +32,9 @@ RUN { \
       echo 'upload_max_filesize = 5M'; \
       echo 'post_max_size = 8M'; \
       echo 'max_file_uploads = 20'; \
+      echo 'display_errors = Off'; \
+      echo 'log_errors = On'; \
+      echo 'expose_php = Off'; \
     } > /usr/local/etc/php/conf.d/app.ini
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
