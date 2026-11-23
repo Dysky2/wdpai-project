@@ -3,7 +3,7 @@
  * One labelled input with optional hint and error message.
  * Set $field before including: ['id', 'name', 'label', 'type' => 'text', 'value' => '',
  * 'autocomplete' => null, 'placeholder' => null, 'required' => true, 'minlength' => null,
- * 'hint' => null, 'error' => null]
+ * 'maxlength' => null, 'hint' => null, 'error' => null]
  */
 $type = $field['type'] ?? 'text';
 $value = $field['value'] ?? '';
@@ -21,6 +21,7 @@ $describedBy = trim(($hint !== null ? $field['id'] . '-hint ' : '') . ($error !=
         <?php if (!empty($field['autocomplete'])): ?>autocomplete="<?= htmlspecialchars($field['autocomplete'], ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
         <?php if (!empty($field['placeholder'])): ?>placeholder="<?= htmlspecialchars($field['placeholder'], ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
         <?php if (!empty($field['minlength'])): ?>minlength="<?= (int) $field['minlength'] ?>"<?php endif; ?>
+        <?php if (!empty($field['maxlength'])): ?>maxlength="<?= (int) $field['maxlength'] ?>"<?php endif; ?>
         <?php if ($field['required'] ?? true): ?>required<?php endif; ?>
         <?php if ($error !== null): ?>aria-invalid="true"<?php endif; ?>
         <?php if ($describedBy !== ''): ?>aria-describedby="<?= htmlspecialchars($describedBy, ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
