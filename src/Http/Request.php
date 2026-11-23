@@ -77,6 +77,13 @@ final class Request
         return $this->parsedBody[$key] ?? $default;
     }
 
+    public function getClientIp(): string
+    {
+        $ip = $this->server['REMOTE_ADDR'] ?? '';
+
+        return is_string($ip) ? $ip : '';
+    }
+
     public function getHeader(string $name, ?string $default = null): ?string
     {
         $normalized = 'HTTP_' . strtoupper(str_replace('-', '_', $name));

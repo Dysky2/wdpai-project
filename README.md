@@ -397,6 +397,7 @@ Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Tes
 | 16 | Brak wycieku informacji o błędach | `docker/php/Dockerfile` (`app.ini`: `display_errors = Off`, `log_errors = On`, `expose_php = Off`) | `php -i` w kontenerze pokazuje `display_errors => Off`; brak nagłówka `X-Powered-By` |
 | 17 | Sekrety poza repozytorium | `.gitignore` (`.env`), `.env.example` tylko ze wzorcami, `docker-compose.yaml` (`${DB_PASSWORD:?set DB_PASSWORD in .env}`) | `git ls-files \| grep "^\.env$"` → pusto; `git grep` po `password\|secret\|api_key` w kodzie nie znajduje haseł |
 | 18 | Brak otwartego przekierowania | `src/Controller/LanguageController.php:27-51` (`safeReturnPath`: tylko ścieżka i query z tego samego hosta) | – |
+| 19 | Audyt nieudanych logowań (bez hasła, odporny na log injection) | `src/Service/LoginAuditLogger.php` (e-mail oczyszczony z znaków sterujących, przycięty do 100 znaków; IP z `REMOTE_ADDR`; wpis w `storage/logs/app.log`), wywołanie w `src/Controller/AuthController.php` | `tests/Unit/Service/LoginAuditLoggerTest.php`; błędne logowanie → wpis `Failed login: reason=invalid_credentials email="…" ip=…`, `grep` hasła w logu → 0 |
 
 Znane ograniczenia: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `APP_ENV=production` (karta deployu), a aplikacja nie ma limitu prób logowania (poza zakresem kryterium).
 

@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Http\Request;
 use App\Http\Response;
 use App\Service\AuthService;
+use App\Service\LoginAuditLogger;
 use App\Service\LoginValidator;
 use App\View\ViewHelper;
 
@@ -19,6 +20,7 @@ final class AuthController extends AbstractController
         ViewHelper $view,
         private readonly AuthService $auth,
         private readonly LoginValidator $validator,
+        private readonly LoginAuditLogger $audit,
     ) {
         parent::__construct($view);
     }
@@ -40,6 +42,7 @@ final class AuthController extends AbstractController
 
         $errorKeys = $this->validator->validate($email, $password);
         if ($errorKeys !== []) {
+            $this->audit->logFailure($email, $request->getClientIp(), 'invalid_input');
             $errors = array_map(fn (string $key): string => $this->view->t($key), $errorKeys);
 
             return $this->renderLogin($email, null, $errors)->setStatusCode(422);
@@ -47,6 +50,7 @@ final class AuthController extends AbstractController
 
         $user = $this->auth->attempt($email, $password);
         if ($user === null) {
+            $this->audit->logFailure($email, $request->getClientIp(), 'invalid_credentials');
             return $this->renderLogin($email, $this->view->t('login.invalid_credentials'))->setStatusCode(422);
         }
 
