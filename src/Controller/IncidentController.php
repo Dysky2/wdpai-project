@@ -48,7 +48,7 @@ final class IncidentController extends AbstractController
         );
 
         return $this->render('incidents/index', $this->shell->build('/incidents') + [
-            'pageTitle' => 'Dziennik incydentów — ApexSteward',
+            'pageTitle' => $this->view->t('incidents.page_title'),
             'counts' => $result->getCounts(),
             'filter' => $result->getStatusGroup(),
             'query' => $result->getSearch(),
@@ -69,7 +69,7 @@ final class IncidentController extends AbstractController
         $incident = $this->incidentService->dossier($this->incidentService->getForUser($user, $id));
 
         return $this->render('incidents/show', $this->shell->build('/incidents') + [
-            'pageTitle' => $incident['code'] . ' — ApexSteward',
+            'pageTitle' => $incident['code'],
             'incident' => $incident,
             'isSteward' => $user->isSteward(),
         ]);
@@ -95,7 +95,7 @@ final class IncidentController extends AbstractController
             return $this->renderForm($user, $old, $this->messages->messages($e->getErrors()))->setStatusCode(422);
         }
 
-        $this->session->addFlash('success', 'Protest ' . $incident->getCode() . ' został zgłoszony do sędziów.');
+        $this->session->addFlash('success', $this->view->t('flash.protest_filed', ['code' => $incident->getCode()]));
 
         return Response::redirect('/incidents/' . $incident->getId());
     }
@@ -109,7 +109,7 @@ final class IncidentController extends AbstractController
         $form = $this->incidentService->reportForm($user);
 
         return $this->render('incidents/create', $this->shell->build('/incidents/create') + [
-            'pageTitle' => 'Nowy protest — ApexSteward',
+            'pageTitle' => $this->view->t('report.page_title'),
             'form' => $form,
             'old' => $old,
             'errors' => $errors,

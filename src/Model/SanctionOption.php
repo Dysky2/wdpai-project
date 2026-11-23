@@ -14,8 +14,6 @@ final class SanctionOption
     private function __construct(
         private readonly PenaltyType $type,
         private readonly ?int $value,
-        private readonly string $title,
-        private readonly string $text,
     ) {
     }
 
@@ -23,12 +21,12 @@ final class SanctionOption
     public static function all(): array
     {
         return [
-            new self(PenaltyType::TIME_PENALTY, 5, 'Kara 5 sekund', 'Doliczana do czasu wyścigu lub odbywana w boksie'),
-            new self(PenaltyType::TIME_PENALTY, 10, 'Kara 10 sekund', 'Surowa kara czasowa w trakcie wyścigu'),
-            new self(PenaltyType::GRID_DROP, 3, 'Cofnięcie o 3 miejsca', 'Stosowane na starcie następnego wyścigu'),
-            new self(PenaltyType::DRIVE_THROUGH, null, 'Przejazd przez aleję', 'Wjazd do alei bez zatrzymania'),
-            new self(PenaltyType::REPRIMAND, null, 'Formalna nagana', 'Ostrzeżenie dyscyplinarne bez kary czasowej'),
-            new self(PenaltyType::DISQUALIFICATION, null, 'Dyskwalifikacja (DSQ)', 'Całkowite wykluczenie z klasyfikacji'),
+            new self(PenaltyType::TIME_PENALTY, 5),
+            new self(PenaltyType::TIME_PENALTY, 10),
+            new self(PenaltyType::GRID_DROP, 3),
+            new self(PenaltyType::DRIVE_THROUGH, null),
+            new self(PenaltyType::REPRIMAND, null),
+            new self(PenaltyType::DISQUALIFICATION, null),
         ];
     }
 
@@ -73,8 +71,22 @@ final class SanctionOption
 
     public function getType(): PenaltyType { return $this->type; }
     public function getValue(): ?int { return $this->value; }
-    public function getTitle(): string { return $this->title; }
-    public function getText(): string { return $this->text; }
+    /** Dictionary key of the radio card title, e.g. "sanction.TIME_PENALTY_5.title". */
+    public function getTitleKey(): string
+    {
+        return $this->key() . '.title';
+    }
+
+    /** Dictionary key of the radio card description. */
+    public function getTextKey(): string
+    {
+        return $this->key() . '.text';
+    }
+
+    private function key(): string
+    {
+        return 'sanction.' . $this->type->value . ($this->value === null ? '' : '_' . $this->value);
+    }
 
     /** TIME_PENALTY and GRID_DROP need a value greater than zero. */
     public function isValid(): bool

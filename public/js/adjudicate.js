@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { confirmDialog } from './modal.js';
 import { attachValidation, rules } from './validator.js';
 
@@ -70,9 +71,9 @@ export function initAdjudicateForm() {
     updateCounter();
 
     attachValidation(form, [
-        [article, [rules.required('Wybierz artykuł.')]],
+        [article, [rules.required(t('js.adjudicate.article_required'))]],
         [points, [rules.required('Podaj punkty karne.'), rules.range(0, 3, 'Punkty karne: od 0 do 3.')]],
-        [reason, [rules.required('Podaj uzasadnienie.'), rules.length(1, REASON_MAX, `Maks. ${REASON_MAX} znaków.`)]],
+        [reason, [rules.required(t('js.adjudicate.reason_required')), rules.length(1, REASON_MAX, t('js.adjudicate.reason_max', { max: REASON_MAX }))]],
     ]);
 
     // Potwierdzenie w modalu przed zapisem kary; po zatwierdzeniu formularz jest wysyłany zwykłym submitem.
@@ -83,8 +84,8 @@ export function initAdjudicateForm() {
         }
         event.preventDefault();
         const submitter = event.submitter ?? form.querySelector('button[type="submit"]');
-        const ok = await confirmDialog('Zapisać orzeczenie i zastosować karę?', submitter, {
-            confirmLabel: 'Zapisz i zastosuj',
+        const ok = await confirmDialog(t('js.adjudicate.confirm'), submitter, {
+            confirmLabel: t('js.adjudicate.confirm_label'),
         });
         if (ok) {
             confirmed = true;
@@ -98,7 +99,7 @@ function initStepper(input, clamp, onChange) {
     const wrap = document.createElement('div');
     wrap.className = 'points-stepper';
     wrap.setAttribute('role', 'group');
-    wrap.setAttribute('aria-label', 'Zmień liczbę punktów karnych');
+    wrap.setAttribute('aria-label', t('js.adjudicate.points_group'));
 
     const make = (label, text, delta) => {
         const button = document.createElement('button');
@@ -114,6 +115,6 @@ function initStepper(input, clamp, onChange) {
         return button;
     };
 
-    wrap.append(make('Mniej punktów', '−', -1), make('Więcej punktów', '+', 1));
+    wrap.append(make(t('js.adjudicate.points_less'), '−', -1), make(t('js.adjudicate.points_more'), '+', 1));
     input.after(wrap);
 }

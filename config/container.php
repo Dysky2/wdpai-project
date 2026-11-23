@@ -9,6 +9,7 @@ use App\Core\Config;
 use App\Core\Container;
 use App\Core\Database;
 use App\Core\SystemClock;
+use App\Core\Translator;
 use App\Core\TransactionRunnerInterface;
 use App\Http\Router;
 use App\Http\Session;
@@ -66,7 +67,14 @@ $container->singleton(StandingRepositoryInterface::class, static fn (Container $
 
 // Autowired classes are not cached by Container, so stateful services are registered as singletons.
 $container->singleton(Session::class, static fn (Container $c): Session => new Session($c->get(Config::class)));
-$container->singleton(ViewHelper::class, static fn (Container $c): ViewHelper => new ViewHelper($c->get(Session::class)));
+$container->singleton(
+    Translator::class,
+    static fn (Container $c): Translator => new Translator($c->get(Session::class), __DIR__ . '/lang'),
+);
+$container->singleton(
+    ViewHelper::class,
+    static fn (Container $c): ViewHelper => new ViewHelper($c->get(Session::class), $c->get(Translator::class)),
+);
 $container->singleton(
     AuthService::class,
     static fn (Container $c): AuthService => new AuthService($c->get(UserRepositoryInterface::class), $c->get(Session::class)),

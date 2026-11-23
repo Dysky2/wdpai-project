@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { ApiError, request } from './api.js';
 import { confirmDialog } from './modal.js';
 
@@ -51,7 +52,7 @@ async function run(button) {
     const action = button.dataset.incidentAction;
     const id = Number(button.dataset.incidentId);
 
-    if (action === 'dismiss' && !(await confirmDialog('Umorzyć sprawę bez dalszych działań?', button))) {
+    if (action === 'dismiss' && !(await confirmDialog(t('js.stewards.dismiss_confirm'), button))) {
         return;
     }
 
@@ -59,7 +60,7 @@ async function run(button) {
     showError(null);
     buttons.forEach((other) => { other.disabled = true; });
     button.setAttribute('aria-busy', 'true');
-    button.textContent = 'Zapisywanie…';
+    button.textContent = t('js.stewards.saving');
 
     try {
         const { data } = await request('POST', `/api/incidents/${id}/${action}`);
@@ -69,7 +70,7 @@ async function run(button) {
     } catch (error) {
         button.textContent = label;
         button.removeAttribute('aria-busy');
-        showError(error instanceof ApiError ? error.message : 'Nieoczekiwany błąd.');
+        showError(error instanceof ApiError ? error.message : t('js.stewards.unexpected'));
         // Przywraca przyciski zgodnie ze stanem widocznym na stronie (brak zmiany po błędzie).
         buttons.forEach((other) => { other.disabled = other.dataset.wasDisabled === 'true'; });
     }

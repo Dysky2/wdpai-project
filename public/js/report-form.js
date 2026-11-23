@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { attachValidation, rules } from './validator.js';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -26,7 +27,7 @@ export function initReportForm() {
         const value = Number(field.value);
         const max = maxLap();
         return Number.isNaN(value) || value < 1 || (max > 0 && value > max)
-            ? `Podaj numer okrążenia od 1 do ${max}.`
+            ? t('js.report.lap_range', { max })
             : null;
     };
 
@@ -54,15 +55,15 @@ export function initReportForm() {
     initPreview(evidence);
 
     attachValidation(form, [
-        [grandPrix, [rules.required('Wybierz sesję Grand Prix.')]],
-        [lap, [rules.required('Podaj numer okrążenia.'), lapRule]],
-        [accused, [rules.required('Wybierz oskarżonego kierowcę.')]],
-        [article, [rules.required('Wybierz rodzaj naruszenia.')]],
+        [grandPrix, [rules.required(t('js.report.grand_prix_required'))]],
+        [lap, [rules.required(t('js.report.lap_required')), lapRule]],
+        [accused, [rules.required(t('js.report.accused_required'))]],
+        [article, [rules.required(t('js.report.article_required'))]],
         [description, [
-            rules.required('Opisz zdarzenie.'),
-            rules.length(20, DESCRIPTION_MAX, `Opis musi mieć od 20 do ${DESCRIPTION_MAX} znaków.`),
+            rules.required(t('js.report.description_required')),
+            rules.length(20, DESCRIPTION_MAX, t('js.report.description_length', { min: 20, max: DESCRIPTION_MAX })),
         ]],
-        [evidence, [rules.file(['image/jpeg', 'image/png'], MAX_BYTES, 'Dozwolone pliki: JPG lub PNG do 5 MB.')]],
+        [evidence, [rules.file(['image/jpeg', 'image/png'], MAX_BYTES, t('js.report.file_type'))]],
     ]);
 }
 
@@ -75,7 +76,7 @@ function initPreview(input) {
 
     const preview = document.createElement('img');
     preview.className = 'dropzone__preview';
-    preview.alt = 'Podgląd wybranego dowodu';
+    preview.alt = t('js.report.preview_alt');
     preview.hidden = true;
     preview.style.maxWidth = '100%';
     preview.style.maxHeight = '200px';

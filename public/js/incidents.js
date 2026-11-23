@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { request } from './api.js';
 
 const results = document.querySelector('[data-incidents-results]');
@@ -35,7 +36,7 @@ export function buildRow(row) {
         if (index > 0) {
             drivers.append(el('span', 'drivers__vs', 'vs'));
         }
-        const tag = el('span', 'driver-tag', `Bolid ${driver.number} `);
+        const tag = el('span', 'driver-tag', `${t('js.driver_car', { number: driver.number })} `);
         tag.append(el('small', '', `(${driver.code})`));
         drivers.append(tag);
     });
@@ -47,7 +48,7 @@ export function buildRow(row) {
     status.append(el('span', `badge badge--${badgeClasses[row.status] ?? 'closed'}`, row.penaltyLabel ?? row.statusLabel));
 
     const action = el('td', 'cell-action');
-    const link = el('a', 'button button--secondary button--small', 'Szczegóły ');
+    const link = el('a', 'button button--secondary button--small', `${t('js.incidents.details')} `);
     link.href = row.url;
     link.append(el('span', 'visually-hidden', row.code));
     action.append(link);
@@ -63,7 +64,7 @@ function buildPager(meta, params) {
     }
 
     const nav = el('nav', 'pagination');
-    nav.setAttribute('aria-label', 'Paginacja');
+    nav.setAttribute('aria-label', t('js.pagination.aria'));
     const add = (label, page, current = false) => {
         const link = el('a', `pagination__link${current ? ' pagination__link--current' : ''}`, label);
         const next = new URLSearchParams(params);
@@ -76,13 +77,13 @@ function buildPager(meta, params) {
     };
 
     if (meta.page > 1) {
-        add('Poprzednia', meta.page - 1);
+        add(t('js.pagination.prev'), meta.page - 1);
     }
     for (let i = 1; i <= pages; i += 1) {
         add(String(i), i, i === meta.page);
     }
     if (meta.page < pages) {
-        add('Następna', meta.page + 1);
+        add(t('js.pagination.next'), meta.page + 1);
     }
     return nav;
 }
@@ -117,7 +118,7 @@ async function load(params, push = true) {
         results.querySelector('[data-incidents-empty]').hidden = data.length > 0;
         results.querySelector('[data-incidents-table]').hidden = data.length === 0;
         results.querySelector('[data-incidents-summary]').textContent =
-            `Pokazano ${data.length} z ${meta.total} incydentów`;
+            t('js.incidents.summary', { shown: data.length, total: meta.total });
         results.querySelector('[data-incidents-pager]').replaceChildren(
             ...[buildPager(meta, params)].filter(Boolean)
         );

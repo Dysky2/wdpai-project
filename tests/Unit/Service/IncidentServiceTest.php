@@ -18,6 +18,8 @@ use App\Tests\Support\FakeTransactionRunner;
 use App\Tests\Support\FakeUploadedFileHandler;
 use App\Tests\Support\Fixtures;
 use App\Tests\Support\FixedClock;
+use App\Tests\Support\FixedLanguage;
+use AppTestsSupportixedlanguage;
 use App\Tests\Support\InMemoryArticleRepository;
 use App\Tests\Support\InMemoryDriverRepository;
 use App\Tests\Support\InMemoryEvidenceRepository;
@@ -63,6 +65,7 @@ final class IncidentServiceTest extends TestCase
             new InMemoryTeamRepository(Fixtures::team(Fixtures::MERCEDES)),
             new UploadService($this->uploadDir, new FakeUploadedFileHandler()),
             new FixedClock(),
+            FixedLanguage::translator(),
         );
     }
 

@@ -3,12 +3,12 @@ $navItems ??= [];
 $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : ''));
 ?>
 <!doctype html>
-<html lang="pl">
+<html lang="<?= $view->e($view->lang()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= $view->e($view->csrfToken()) ?>">
-    <title><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <title><?= $view->e($pageTitle . ' — ' . $view->t('app.name')) ?></title>
     <script>
         (function () {
             const storageKey = 'theme';
@@ -34,7 +34,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <link rel="stylesheet" href="/css/screens.css">
 </head>
 <body<?= $bodyClasses !== '' ? ' class="' . htmlspecialchars($bodyClasses, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
-    <a class="skip-link" href="#main">Przejdź do treści</a>
+    <a class="skip-link" href="#main"><?= $view->te('app.skip_to_content') ?></a>
 
     <?php require __DIR__ . '/partials/header.html.php'; ?>
     <?php require __DIR__ . '/partials/flash.html.php'; ?>
@@ -46,6 +46,7 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <?php require __DIR__ . '/partials/footer.html.php'; ?>
     <?php require __DIR__ . '/partials/tabbar.html.php'; ?>
 
+    <script type="application/json" id="i18n-data"><?= $view->scriptMessagesJson() ?></script>
     <script src="/js/theme.js" defer></script>
     <script type="module" src="/js/app.js" defer></script>
 </body>
