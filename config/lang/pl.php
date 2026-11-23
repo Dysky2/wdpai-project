@@ -60,6 +60,7 @@ return [
     'login.password_placeholder' => 'Wprowadź hasło',
     'login.submit' => 'Zaloguj się',
     'login.invalid_credentials' => 'Nieprawidłowy e-mail lub hasło',
+    'login.locked' => 'Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za :minutes min.',
     'login.invalid_email' => 'Podaj poprawny adres e-mail.',
     'login.email_too_long' => 'Adres e-mail może mieć maksymalnie 254 znaki.',
     'login.password_too_long' => 'Hasło może mieć maksymalnie 128 znaków.',
