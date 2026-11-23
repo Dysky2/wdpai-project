@@ -61,6 +61,8 @@ return [
     'login.submit' => 'Log in',
     'login.invalid_credentials' => 'Invalid e-mail or password',
     'login.invalid_email' => 'Enter a valid e-mail address.',
+    'login.email_too_long' => 'The e-mail address can be at most 254 characters long.',
+    'login.password_too_long' => 'The password can be at most 128 characters long.',
 
     // Statuses
     'status.REPORTED' => 'Reported',

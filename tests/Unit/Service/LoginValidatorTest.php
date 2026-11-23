@@ -33,6 +33,43 @@ final class LoginValidatorTest extends TestCase
         ];
     }
 
+    public function testPasswordAtTheLimitPasses(): void
+    {
+        $password = str_repeat('a', LoginValidator::PASSWORD_MAX_LENGTH);
+
+        self::assertSame([], (new LoginValidator())->validate('toto@mercedes.f1', $password));
+    }
+
+    public function testTooLongPasswordIsRejected(): void
+    {
+        $password = str_repeat('a', LoginValidator::PASSWORD_MAX_LENGTH + 1);
+
+        self::assertSame(
+            ['password' => 'login.password_too_long'],
+            (new LoginValidator())->validate('toto@mercedes.f1', $password),
+        );
+    }
+
+    public function testTooLongEmailIsRejectedWithoutFormatCheck(): void
+    {
+        $email = str_repeat('a', LoginValidator::EMAIL_MAX_LENGTH) . '@mercedes.f1';
+
+        self::assertSame(
+            ['email' => 'login.email_too_long'],
+            (new LoginValidator())->validate($email, 'demo123'),
+        );
+    }
+
+    public function testBothFieldsReportTheirOwnError(): void
+    {
+        $errors = (new LoginValidator())->validate(str_repeat('a', 5000), str_repeat('p', 1_000_000));
+
+        self::assertSame(
+            ['email' => 'login.email_too_long', 'password' => 'login.password_too_long'],
+            $errors,
+        );
+    }
+
     #[DataProvider('malformedEmails')]
     public function testMalformedEmailIsRejected(string $email): void
     {
