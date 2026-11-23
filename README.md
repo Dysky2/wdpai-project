@@ -357,7 +357,19 @@ docker compose exec php php bin/cron.php expire-penalties
 docker compose exec php cat storage/logs/cron.log
 ```
 
-Harmonogram o północy (usługa `cron` w Dockerze) jest w osobnej karcie (S6-25b).
+### Harmonogram (usługa `cron`)
+
+Usługa `cron` w `docker-compose.yaml` (ten sam obraz co `php`) uruchamia `crond` w pierwszym planie i wykonuje zadanie codziennie o północy wg `docker/cron/crontab`. Kontener startuje dopiero, gdy baza jest zdrowa (healthcheck `pg_isready`). `crond` nie dziedziczy zmiennych środowiskowych, więc polecenie startowe zapisuje `DB_*`, `APP_*` i `SMTP_*` do `/etc/cron.env`, które crontab wczytuje przed uruchomieniem skryptu.
+
+Jak sprawdzić działanie:
+
+```bash
+docker compose ps cron                       # usługa działa
+docker compose logs cron                     # start crond
+docker compose exec cron sh -c '. /etc/cron.env; php /app/bin/cron.php expire-penalties'   # ręczne wywołanie
+```
+
+Test harmonogramu bez czekania do północy: w `docker/cron/crontab` zamień `0 0 * * *` na `* * * * *`, wykonaj `docker compose restart cron`, po minucie sprawdź `storage/logs/cron.log` (nowy wpis `INFO expire-penalties`), a potem przywróć `0 0 * * *` i ponownie zrestartuj usługę.
 
 ---
 
