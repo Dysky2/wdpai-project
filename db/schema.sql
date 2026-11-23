@@ -114,8 +114,15 @@ CREATE TABLE penalties (
         (penalty_type NOT IN ('TIME_PENALTY', 'GRID_DROP') AND sanction_value IS NULL))
 );
 
+CREATE TABLE login_attempts (                          -- nieudane logowania (blokada brute-force)
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email_key    VARCHAR(254) NOT NULL,                -- e-mail małymi literami, także dla nieistniejących kont
+    ip_address   VARCHAR(45)  NOT NULL DEFAULT '',
+    attempted_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
 
 -- Indeksy (poza PK/UNIQUE)
+CREATE INDEX idx_login_attempts_email_time ON login_attempts (email_key, attempted_at);
 CREATE INDEX idx_drivers_team            ON drivers   (team_id);
 CREATE INDEX idx_incidents_grand_prix    ON incidents (grand_prix_id);
 CREATE INDEX idx_incidents_status        ON incidents (status);

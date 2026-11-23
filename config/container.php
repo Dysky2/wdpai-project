@@ -36,6 +36,8 @@ use App\Repository\PdoIncidentRepository;
 use App\Repository\PdoInfringementArticleRepository;
 use App\Repository\PdoPenaltyRepository;
 use App\Repository\PdoStandingRepository;
+use App\Repository\LoginAttemptRepositoryInterface;
+use App\Repository\PdoLoginAttemptRepository;
 use App\Repository\PdoUserRepository;
 use App\Repository\PenaltyRepositoryInterface;
 use App\Repository\StandingRepositoryInterface;
@@ -56,6 +58,7 @@ $container->singleton(LoggerInterface::class, static fn (): LoggerInterface => n
 $container->singleton(MailerInterface::class, static fn (): MailerInterface => new NullMailer());
 
 $container->singleton(UserRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoUserRepository::class));
+$container->singleton(LoginAttemptRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoLoginAttemptRepository::class));
 $container->singleton(TeamRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoTeamRepository::class));
 $container->singleton(DriverRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoDriverRepository::class));
 $container->singleton(GrandPrixRepositoryInterface::class, static fn (Container $c): object => $c->get(PdoGrandPrixRepository::class));

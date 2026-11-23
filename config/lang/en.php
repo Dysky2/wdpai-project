@@ -60,6 +60,7 @@ return [
     'login.password_placeholder' => 'Enter your password',
     'login.submit' => 'Log in',
     'login.invalid_credentials' => 'Invalid e-mail or password',
+    'login.locked' => 'Too many failed login attempts. Try again in :minutes min.',
     'login.invalid_email' => 'Enter a valid e-mail address.',
     'login.email_too_long' => 'The e-mail address can be at most 254 characters long.',
     'login.password_too_long' => 'The password can be at most 128 characters long.',

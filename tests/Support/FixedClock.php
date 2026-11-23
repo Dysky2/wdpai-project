@@ -17,6 +17,11 @@ final class FixedClock implements ClockInterface
         return $this->now;
     }
 
+    public function advanceMinutes(int $minutes): void
+    {
+        $this->now = $this->now->modify(sprintf('+%d minutes', $minutes));
+    }
+
     public function advanceDays(int $days): void
     {
         $this->now = $this->now->modify(sprintf('+%d days', $days));
