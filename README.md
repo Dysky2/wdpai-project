@@ -53,7 +53,12 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `POSTGRES_PORT`| `5432` | Port PostgreSQL wystawiony na maszynę hosta |
 | `SMTP_HOST` | `mailpit` | Nazwa usługi serwera SMTP dla PHPMailer |
 | `SMTP_PORT` | `1025` | Port SMTP serwera Mailpit |
+| `SMTP_USER`, `SMTP_PASS` | puste | Dane logowania SMTP (Mailpit działa bez uwierzytelniania) |
+| `SMTP_ENCRYPTION` | puste | `tls` (STARTTLS), `ssl` (SMTPS) lub puste |
+| `SMTP_FROM` | `stewards@apexsteward.local` | Adres nadawcy orzeczeń |
 | `MAILPIT_PORT` | `8025` | Port Web UI skrzynki Mailpit na hoście |
+
+**Poczta:** po orzeczeniu z zaznaczonym `notify_team` `PhpMailerMailer` (PHPMailer, SMTP) wysyła „FIA Stewards Decision” (HTML + AltBody z `public/views/emails/`) do szefów zespołu ukaranego kierowcy i zespołu zgłaszającego. Wysyłka następuje po commicie transakcji; błąd SMTP trafia do `storage/logs/app.log` i nie cofa kary. Podgląd: <http://localhost:8025>.
 | `PGADMIN_PORT` | `5050` | Port interfejsu PgAdmin na hoście |
 
 ---

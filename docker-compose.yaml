@@ -44,8 +44,12 @@ services:
       DB_NAME: ${DB_NAME:?set DB_NAME in .env}
       DB_USER: ${DB_USER:?set DB_USER in .env}
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
-      SMTP_HOST: mailpit
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PORT: 1025
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_ENCRYPTION: ${SMTP_ENCRYPTION:-}
+      SMTP_FROM: ${SMTP_FROM:-stewards@apexsteward.local}
     volumes:
       - .:/app
     depends_on:
