@@ -166,7 +166,7 @@ return [
     'show.choose_ruling' => 'Wybierz rozstrzygnięcie dla tego incydentu:',
     'show.mark_investigation' => 'Oznacz jako w trakcie dochodzenia',
     'show.issue_penalty' => 'Nałóż karę',
-    'show.dismiss' => 'Umorz sprawę (bez dalszych działań)',
+    'show.dismiss' => 'Umórz sprawę (bez dalszych działań)',
 
     // Standings
     'standings.eyebrow' => 'Przepisy Sportowe FIA • Załącznik L',
