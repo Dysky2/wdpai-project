@@ -5,7 +5,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const DESCRIPTION_MAX = 500;
 
 export function initReportForm() {
-    const form = document.querySelector('form[action="/incidents"]');
+    // POST only: the incidents list has a GET search form with the same action.
+    const form = document.querySelector('form[action="/incidents"][method="post"]');
     if (!form) {
         return;
     }
