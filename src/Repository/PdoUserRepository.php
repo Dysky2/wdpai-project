@@ -28,6 +28,16 @@ final class PdoUserRepository extends AbstractPdoRepository implements UserRepos
         return $row === null ? null : $this->hydrate($row);
     }
 
+    public function findTeamPrincipals(int $teamId): array
+    {
+        $rows = $this->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM users WHERE team_id = :team AND role = :role ORDER BY id',
+            ['team' => $teamId, 'role' => Role::TEAM_PRINCIPAL->value]
+        );
+
+        return array_map(fn (array $row): User => $this->hydrate($row), $rows);
+    }
+
     public function updatePasswordHash(int $id, string $passwordHash): void
     {
         $this->execute(
