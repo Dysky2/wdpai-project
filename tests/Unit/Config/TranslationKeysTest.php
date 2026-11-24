@@ -52,8 +52,9 @@ final class TranslationKeysTest extends TestCase
     public function testNoTranslationIsEmpty(): void
     {
         foreach (['pl.php', 'en.php'] as $file) {
+            $translations = require self::ROOT . $file;
             array_walk_recursive(
-                require self::ROOT . $file,
+                $translations,
                 static fn ($value, $key) => self::assertNotSame('', trim((string) $value), $file . ': empty value for ' . $key),
             );
         }
