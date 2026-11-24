@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Site header. Variables (all optional):
  *  - $navItems:    list of ['label' => string, 'href' => string, 'route' => string]
@@ -24,8 +27,8 @@ $activeRoute ??= '';
                 <ul class="main-nav__list">
                     <?php foreach ($navItems as $item): ?>
                         <li>
-                            <a class="main-nav__link" href="<?= htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $activeRoute === $item['route'] ? ' aria-current="page"' : '' ?>>
-                                <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
+                            <a class="main-nav__link" href="<?= $view->e($item['href']) ?>"<?= $activeRoute === $item['route'] ? ' aria-current="page"' : '' ?>>
+                                <?= $view->e($item['label']) ?>
                             </a>
                         </li>
                     <?php endforeach; ?>
@@ -40,12 +43,12 @@ $activeRoute ??= '';
                 <?php endforeach; ?>
             </nav>
             <?php if ($currentUser !== null): ?>
-                <span class="user-chip"><?= htmlspecialchars($currentUser['roleLabel'] . ' (' . $currentUser['name'] . ')', ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="user-chip"><?= $view->e($currentUser['roleLabel'] . ' (' . $currentUser['name'] . ')') ?></span>
                 <form action="/logout" method="post">
                     <?= $view->csrfField() ?>
                     <button class="link-button" type="submit"><?= $view->te('nav.logout') ?></button>
                 </form>
-                <span class="avatar" aria-hidden="true"><?= htmlspecialchars($currentUser['initial'], ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="avatar" aria-hidden="true"><?= $view->e($currentUser['initial']) ?></span>
             <?php endif; ?>
             <button class="theme-toggle" type="button" aria-label="<?= $view->te('theme.toggle_label') ?>" aria-pressed="false" title="<?= $view->te('theme.toggle_title') ?>">
                 <i aria-hidden="true">☾</i>

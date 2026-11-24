@@ -1,3 +1,4 @@
+<?php declare(strict_types=1) ?>
 <nav class="breadcrumb" aria-label="<?= $view->te('show.breadcrumb_aria') ?>">
     <a href="/incidents"><?= $view->te('nav.incidents') ?></a>
     <span aria-hidden="true">/</span>

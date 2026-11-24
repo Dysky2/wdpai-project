@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** Status badge. Set $badge = ['status' => 'UNDER_INVESTIGATION', 'label' => 'Text shown'] before including. */
 $badgeClasses = [
     'REPORTED' => 'reported',
@@ -12,4 +15,4 @@ $badgeClasses = [
     'CLEAN' => 'reported',
 ];
 ?>
-<span class="badge badge--<?= htmlspecialchars($badgeClasses[$badge['status']] ?? 'closed', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($badge['label'], ENT_QUOTES, 'UTF-8') ?></span>
+<span class="badge badge--<?= $view->e($badgeClasses[$badge['status']] ?? 'closed') ?>"><?= $view->e($badge['label']) ?></span>

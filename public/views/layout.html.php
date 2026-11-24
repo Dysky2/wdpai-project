@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 $navItems ??= [];
 $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : ''));
 ?>
@@ -33,13 +36,13 @@ $bodyClasses = trim(($bodyClass ?? '') . ($navItems !== [] ? ' has-tabbar' : '')
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/screens.css">
 </head>
-<body<?= $bodyClasses !== '' ? ' class="' . htmlspecialchars($bodyClasses, ENT_QUOTES, 'UTF-8') . '"' : '' ?>>
+<body<?= $bodyClasses !== '' ? ' class="' . $view->e($bodyClasses) . '"' : '' ?>>
     <a class="skip-link" href="#main"><?= $view->te('app.skip_to_content') ?></a>
 
     <?php require __DIR__ . '/partials/header.html.php'; ?>
     <?php require __DIR__ . '/partials/flash.html.php'; ?>
 
-    <main class="page<?= !empty($pageClass) ? ' ' . htmlspecialchars((string) $pageClass, ENT_QUOTES, 'UTF-8') : '' ?>" id="main" tabindex="-1">
+    <main class="page<?= !empty($pageClass) ? ' ' . $view->e($pageClass) : '' ?>" id="main" tabindex="-1">
         <?= $content ?>
     </main>
 

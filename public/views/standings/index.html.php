@@ -1,3 +1,4 @@
+<?php declare(strict_types=1) ?>
 <header class="page-header">
     <div>
         <p class="eyebrow"><?= $view->te('standings.eyebrow') ?></p>
