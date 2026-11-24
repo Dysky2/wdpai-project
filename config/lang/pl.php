@@ -263,6 +263,7 @@ return [
 
     // Flash messages
     'flash.protest_filed' => 'Protest :code został zgłoszony do sędziów.',
+    'flash.adjudicate_needs_investigation' => 'Najpierw rozpocznij dochodzenie, dopiero potem możesz nałożyć karę.',
     'flash.ruling_saved' => 'Orzeczenie dla :code zostało zapisane. Aktywne punkty kierowcy: :points.',
     'flash.ruling_saved_suspended' => 'Orzeczenie dla :code zostało zapisane. Aktywne punkty kierowcy: :points. Kierowca jest zawieszony na 1 wyścig (limit 12 punktów).',
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Exception\UnauthorizedException;
+use App\Exception\UnprocessableEntityException;
 use App\Exception\ValidationException;
 use App\Http\Request;
 use App\Http\Response;
@@ -57,8 +58,19 @@ final class StewardController extends AbstractController
             }
         }
 
-        // 404 for a missing case, 422 unless the case is UNDER_INVESTIGATION (role is checked by the route middleware).
-        $form = $this->adjudication->formData($id);
+        // 404 for a missing case (role is checked by the route middleware).
+        try {
+            $form = $this->adjudication->formData($id);
+        } catch (UnprocessableEntityException $e) {
+            if ($request->isPost()) {
+                throw $e;
+            }
+
+            // Opened by URL before the investigation started: explain instead of a bare 422 page.
+            $this->session->addFlash('error', $this->view->t('flash.adjudicate_needs_investigation'));
+
+            return Response::redirect('/incidents/' . $id);
+        }
         $incident = $this->incidentService->dossier($form->getIncident());
 
         $response = $this->render('stewards/adjudicate', $this->shell->build('/incidents') + [

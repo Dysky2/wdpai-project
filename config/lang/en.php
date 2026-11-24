@@ -263,6 +263,7 @@ return [
 
     // Flash messages
     'flash.protest_filed' => 'Protest :code has been submitted to the stewards.',
+    'flash.adjudicate_needs_investigation' => 'Start the investigation first; only then can you impose a penalty.',
     'flash.ruling_saved' => 'The ruling for :code has been saved. Driver\'s active points: :points.',
     'flash.ruling_saved_suspended' => 'The ruling for :code has been saved. Driver\'s active points: :points. The driver is suspended for 1 race (12-point limit).',
 
