@@ -1,3 +1,4 @@
+<?php declare(strict_types=1) ?>
 <section class="card panel-card error-card" aria-labelledby="error-heading">
     <div class="card__body">
         <p class="error-card__code" aria-hidden="true"><?= (int) $status ?></p>

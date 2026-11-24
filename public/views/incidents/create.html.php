@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Protest form. Data: $form (App\Service\ReportForm), $old (submitted values), $errors (field => message).
  */

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /** Mobile bottom tab bar; same $navItems and $activeRoute as the header. */
 $navItems ??= [];
 $activeRoute ??= '';
@@ -8,8 +11,8 @@ $activeRoute ??= '';
         <ul class="tabbar__list">
             <?php foreach ($navItems as $item): ?>
                 <li>
-                    <a class="tabbar__link" href="<?= htmlspecialchars($item['href'], ENT_QUOTES, 'UTF-8') ?>"<?= $activeRoute === $item['route'] ? ' aria-current="page"' : '' ?>>
-                        <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
+                    <a class="tabbar__link" href="<?= $view->e($item['href']) ?>"<?= $activeRoute === $item['route'] ? ' aria-current="page"' : '' ?>>
+                        <?= $view->e($item['label']) ?>
                     </a>
                 </li>
             <?php endforeach; ?>

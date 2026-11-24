@@ -1,3 +1,4 @@
+<?php declare(strict_types=1) ?>
 <section class="card panel-card" aria-labelledby="login-heading">
     <div class="card__body">
         <div class="panel-card__header">
