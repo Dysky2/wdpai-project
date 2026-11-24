@@ -40,7 +40,7 @@ $team = $form->getTeam();
                 <label for="grand_prix_id"><?= $view->te('report.grand_prix') ?> <span class="required">*</span></label>
                 <select id="grand_prix_id" name="grand_prix_id" required<?= isset($errors['grand_prix_id']) ? ' aria-invalid="true" aria-describedby="grand_prix_id-error"' : '' ?>>
                     <?php foreach ($form->getGrandsPrix() as $gp): ?>
-                        <option value="<?= (int) $gp->getId() ?>" data-total-laps="<?= (int) $gp->getTotalLaps() ?>"<?= (string) $gp->getId() === $selectedGp ? ' selected' : '' ?>><?= $view->e($gp->getSeasonYear() . ' ' . $gp->getName()) ?></option>
+                        <option value="<?= (int) $gp->getId() ?>" data-total-laps="<?= (int) $gp->getTotalLaps() ?>"<?= (string) $gp->getId() === $selectedGp ? ' selected' : '' ?>><?= $view->e($gp->getName()) ?></option>
                     <?php endforeach; ?>
                 </select>
                 <?php if (isset($errors['grand_prix_id'])): ?>
