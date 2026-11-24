@@ -73,6 +73,11 @@
     box-sizing: border-box;
 }
 
+/* Author display rules (e.g. .button { display: flex }) must not override [hidden]. */
+[hidden] {
+    display: none !important;
+}
+
 html {
     -webkit-text-size-adjust: 100%;
 }
