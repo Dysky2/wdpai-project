@@ -6,6 +6,31 @@ Platforma umożliwia szefom zespołów F1 (`TEAM_PRINCIPAL`) oficjalne zgłaszan
 
 ---
 
+## Autorzy i zakres odpowiedzialności
+
+| Autor | Zakres |
+|---|---|
+| Dawid (GitHub: [Dysky2](https://github.com/Dysky2)) | projekt i całość implementacji: infrastruktura Docker, baza danych, backend PHP (MVC), frontend, testy, dokumentacja |
+
+Projekt zaliczeniowy z przedmiotu WDPAI. Historia zadań: tablica Trello WDPAI, jedna gałąź `WDP-NN` na kartę.
+
+---
+
+## Zrzuty ekranu
+
+Zrzuty pochodzą z działającej aplikacji z danymi z `db/seed.sql` (desktop 1440 px, mobile 375 px), katalog `docs/screenshots/`.
+
+| Widok | Desktop | Mobile |
+|---|---|---|
+| Logowanie | ![Logowanie (desktop)](docs/screenshots/desktop-login.png) | ![Logowanie (mobile)](docs/screenshots/mobile-login.png) |
+| Dziennik incydentów | ![Dziennik incydentów (desktop)](docs/screenshots/desktop-incidents.png) | ![Dziennik incydentów (mobile)](docs/screenshots/mobile-incidents.png) |
+| Akta sprawy | ![Akta sprawy (desktop)](docs/screenshots/desktop-incident-detail.png) | ![Akta sprawy (mobile)](docs/screenshots/mobile-incident-detail.png) |
+| Zgłoszenie protestu | ![Zgłoszenie protestu (desktop)](docs/screenshots/desktop-create.png) | ![Zgłoszenie protestu (mobile)](docs/screenshots/mobile-create.png) |
+| Orzeczenie sędziego | ![Orzeczenie sędziego (desktop)](docs/screenshots/desktop-adjudicate.png) | ![Orzeczenie sędziego (mobile)](docs/screenshots/mobile-adjudicate.png) |
+| Klasyfikacja Superlicencji | ![Klasyfikacja Superlicencji (desktop)](docs/screenshots/desktop-standings.png) | ![Klasyfikacja Superlicencji (mobile)](docs/screenshots/mobile-standings.png) |
+
+---
+
 ## Tech stack
 
 | Warstwa | Technologie |
@@ -57,9 +82,9 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `SMTP_ENCRYPTION` | puste | `tls` (STARTTLS), `ssl` (SMTPS) lub puste |
 | `SMTP_FROM` | `stewards@apexsteward.local` | Adres nadawcy orzeczeń |
 | `MAILPIT_PORT` | `8025` | Port Web UI skrzynki Mailpit na hoście |
+| `PGADMIN_PORT` | `5050` | Port interfejsu PgAdmin na hoście |
 
 **Poczta:** po orzeczeniu z zaznaczonym `notify_team` `PhpMailerMailer` (PHPMailer, SMTP) wysyła „FIA Stewards Decision” (HTML + AltBody z `public/views/emails/`) do szefów zespołu ukaranego kierowcy i zespołu zgłaszającego. Wysyłka następuje po commicie transakcji; błąd SMTP trafia do `storage/logs/app.log` i nie cofa kary. Podgląd: <http://localhost:8025>.
-| `PGADMIN_PORT` | `5050` | Port interfejsu PgAdmin na hoście |
 
 ---
 
@@ -349,7 +374,7 @@ Testy (`tests/Unit/`, konfiguracja w `phpunit.xml`) nie wymagają bazy, sieci an
 | `Service/UploadServiceTest` | poprawny PNG/JPG, skrypt PHP jako `.jpg`, zły MIME, plik > 5 MB, losowa nazwa |
 | `Model/LicenceStatusTest` | progi 0 / 1–6 / 7–8 / 9–11 / ≥ 12 |
 | `Http/RouterTest` | `{id}` dla `abc`, `0`, `-1` → 400, brak trasy → 404, wyjątek → 500 bez szczegółów |
-| `Config/TranslationKeysTest` | identyczny zestaw kluczy w `pl.php` i `en.php` (pomijany do czasu powstania słowników) |
+| `Config/TranslationKeysTest` | identyczny zestaw kluczy w `pl.php` i `en.php` |
 
 ---
 
@@ -405,7 +430,11 @@ Każdy punkt ma wskazanie pliku i linii oraz sposób weryfikacji. Kolumna „Tes
 | 19 | Audyt nieudanych logowań (bez hasła, odporny na log injection) | `src/Service/LoginAuditLogger.php` (e-mail oczyszczony z znaków sterujących, przycięty do 100 znaków; IP z `REMOTE_ADDR`; wpis w `storage/logs/app.log`), wywołanie w `src/Controller/AuthController.php` | `tests/Unit/Service/LoginAuditLoggerTest.php`; błędne logowanie → wpis `Failed login: reason=invalid_credentials email="…" ip=…`, `grep` hasła w logu → 0 |
 | 20 | Blokada brute-force: 5 nieudanych logowań na e-mail w 10 min → 429 do końca blokady (też dla nieistniejących kont, bez Argon2) | `src/Service/LoginThrottle.php` (okno, limit, reset po sukcesie), `src/Repository/PdoLoginAttemptRepository.php`, tabela `login_attempts` w `db/schema.sql`, użycie w `src/Controller/AuthController.php` | `tests/Unit/Service/LoginThrottleTest.php` (zegar `FixedClock`); 6 błędnych logowań `toto@mercedes.f1` → 422 ×5, potem 429, także z poprawnym hasłem |
 
-Znane ograniczenia: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `APP_ENV=production` (karta deployu), a aplikacja nie ma limitu prób logowania (poza zakresem kryterium).
+Znane ograniczenie: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `APP_ENV=production` (karta deployu).
+
+## Deploy
+
+> Link do wdrożenia zostanie dopisany po zrealizowaniu karty S8-31 (VPS + Docker Compose, HTTPS, `APP_ENV=production`). Do tego czasu aplikację uruchamia się lokalnie według sekcji „Szybki start”.
 
 ## Zasady developmentu
 
