@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controller\ApiIncidentController;
 use App\Controller\AuthController;
+use App\Controller\EvidenceController;
 use App\Controller\HomeController;
 use App\Controller\IncidentController;
 use App\Controller\LanguageController;
@@ -40,6 +41,10 @@ return static function (Router $router, Container $container): void {
     $router->get('/incidents/create', IncidentController::class, 'create', $principal);
     $router->post('/incidents', IncidentController::class, 'store', $principal);
     $router->get('/incidents/{id}', IncidentController::class, 'show', $auth);
+
+    // Evidence images: no AuthMiddleware on purpose, the controller answers a guest with 401 instead of a
+    // redirect (the request comes from <img>); ownership = the case-page rule (403/404). Bytes go via X-Accel-Redirect.
+    $router->get('/uploads/([a-f0-9]{32}\.(?:png|jpg))', EvidenceController::class, 'show');
 
     $router->get('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $steward);
     $router->post('/stewards/adjudicate/{id}', StewardController::class, 'adjudicate', $steward);

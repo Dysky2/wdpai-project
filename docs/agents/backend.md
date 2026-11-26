@@ -132,6 +132,8 @@ public function issuePenalty(IssuePenaltyCommand $cmd, User $steward): Penalty
 6. Zwraca ścieżkę względną, oryginalną nazwę, MIME, rozmiar i `sha256`; do bazy trafiają wyłącznie te metadane (tabela `incident_evidence`).
 Test obowiązkowy: plik `.php` z nazwą `x.jpg` oraz plik z podmienionym MIME są odrzucane.
 
+**Odczyt dowodu (`GET /uploads/{nazwa}`):** nginx nie serwuje `/uploads/` statycznie, tylko przez front controller. `EvidenceController` → gość 401 (nie redirect, bo żądanie pochodzi z `<img>`); `EvidenceService::fileForUser` → nazwa musi pasować do `^[a-f0-9]{32}\.(png|jpg)$` i istnieć w `incident_evidence` (inaczej 404), własność sprawdza `IncidentService::getForUser` (ta sama reguła co akta: brak sprawy 404, cudzy zespół 403), brak pliku na dysku 404. Sukces = pusta odpowiedź z `X-Accel-Redirect: /_protected/uploads/<nazwa>`, `Content-Type` z rozszerzenia (białej listy) i `Cache-Control: private, no-store`; bajty wysyła nginx z lokalizacji `internal`. Test: `tests/Unit/Service/EvidenceServiceTest.php`.
+
 ---
 
 ## 8. CRON (K32)

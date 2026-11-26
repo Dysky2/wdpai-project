@@ -11,7 +11,11 @@ namespace App\Service\Upload;
 final class UploadService
 {
     public const MAX_BYTES = 5 * 1024 * 1024;
+    /** URL prefix of evidence files; GET /uploads/{name} is served by EvidenceController after an ownership check. */
     public const PUBLIC_PREFIX = '/uploads/';
+
+    /** Shape of a stored file name: 32 hex chars from random_bytes(16) + a whitelisted extension. */
+    private const STORED_NAME = '~^[a-f0-9]{32}\.(?:png|jpg)\z~';
 
     /** Whitelist: real MIME type => extension. */
     private const ALLOWED = [
@@ -91,6 +95,32 @@ final class UploadService
         if (is_file($path)) {
             unlink($path);
         }
+    }
+
+    /** True only for names this service generates (rejects traversal, other extensions, anything user-made). */
+    public function isStoredName(string $fileName): bool
+    {
+        return preg_match(self::STORED_NAME, $fileName) === 1;
+    }
+
+    /** True when a stored file with this name is on disk. */
+    public function exists(string $fileName): bool
+    {
+        return $this->isStoredName($fileName) && is_file($this->pathFor($fileName));
+    }
+
+    /**
+     * Content type of a stored file, from its extension (which was derived from the finfo MIME at upload).
+     *
+     * @throws \InvalidArgumentException when the name is not a stored file name
+     */
+    public function mimeTypeOf(string $fileName): string
+    {
+        $mime = $this->isStoredName($fileName)
+            ? array_search(pathinfo($fileName, PATHINFO_EXTENSION), self::ALLOWED, true)
+            : false;
+
+        return is_string($mime) ? $mime : throw new \InvalidArgumentException('Not a stored evidence file name');
     }
 
     private function pathFor(string $fileName): string
