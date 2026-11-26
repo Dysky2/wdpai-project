@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
-use App\Exception\ForbiddenException;
 use App\Exception\NotFoundException;
 use App\Model\Evidence;
 use App\Model\IncidentDetail;
@@ -122,16 +121,16 @@ final class EvidenceServiceTest extends TestCase
         self::assertSame('image/jpeg', $this->service->fileForUser(Fixtures::steward(), self::JPG)->mimeType);
     }
 
-    public function testPrincipalOfAnUninvolvedTeamIsForbidden(): void
+    public function testPrincipalOfAnUninvolvedTeamGetsNotFound(): void
     {
-        $this->expectException(ForbiddenException::class);
+        $this->expectException(NotFoundException::class);
 
         $this->service->fileForUser(Fixtures::principal(self::FERRARI), self::PNG);
     }
 
-    public function testPrincipalWithoutTeamIsForbidden(): void
+    public function testPrincipalWithoutTeamGetsNotFound(): void
     {
-        $this->expectException(ForbiddenException::class);
+        $this->expectException(NotFoundException::class);
 
         $this->service->fileForUser(
             new User(5, 'x@team.f1', 'hash', Role::TEAM_PRINCIPAL, null, 'No', 'Team', Fixtures::now()),
@@ -192,11 +191,11 @@ final class EvidenceServiceTest extends TestCase
         $this->service->fileForUser(Fixtures::steward(), self::PNG);
     }
 
-    public function testForbiddenUserLearnsNothingAboutAMissingFile(): void
+    public function testUninvolvedUserLearnsNothingAboutAMissingFile(): void
     {
-        // Ownership is checked before the disk: another team gets 403 whether or not the file is still there.
+        // Ownership is checked before the disk: another team gets 404 whether or not the file is still there.
         unlink($this->uploadDir . '/' . self::PNG);
-        $this->expectException(ForbiddenException::class);
+        $this->expectException(NotFoundException::class);
 
         $this->service->fileForUser(Fixtures::principal(self::FERRARI), self::PNG);
     }

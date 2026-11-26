@@ -211,15 +211,16 @@ final class IncidentService
     /**
      * Case file for the case page.
      *
-     * @throws NotFoundException  when the case does not exist
-     * @throws ForbiddenException when a team principal opens a case of another team
+     * @throws NotFoundException when the case does not exist or, for a team principal, belongs to another team
+     *                           (the same answer in both cases, so case IDs cannot be enumerated)
      */
     public function getForUser(User $user, int $id): IncidentDetail
     {
         $detail = $this->details->findById($id) ?? throw new NotFoundException('Incident not found');
 
         if (!$user->isSteward() && !$detail->belongsToTeam($user->getTeamId() ?? 0)) {
-            throw new ForbiddenException('This case belongs to another team');
+            // Same answer as for a missing case, so IDs of other teams' cases cannot be enumerated.
+            throw new NotFoundException('Incident not found');
         }
 
         return $detail;
