@@ -84,7 +84,7 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `MAILPIT_PORT` | `8025` | Port Web UI skrzynki Mailpit na hoście |
 | `PGADMIN_PORT` | `5050` | Port interfejsu PgAdmin na hoście |
 
-**Poczta:** po orzeczeniu z zaznaczonym `notify_team` `PhpMailerMailer` (PHPMailer, SMTP) wysyła „FIA Stewards Decision” (HTML + AltBody z `public/views/emails/`) do szefów zespołu ukaranego kierowcy i zespołu zgłaszającego. Wysyłka następuje po commicie transakcji; błąd SMTP trafia do `storage/logs/app.log` i nie cofa kary. Podgląd: <http://localhost:8025>.
+**Poczta:** po orzeczeniu z zaznaczonym `notify_team` `PhpMailerMailer` (PHPMailer, SMTP) wysyła „FIA Stewards Decision” (HTML + AltBody z `public/views/emails/`) do szefów zespołu ukaranego kierowcy i zespołu zgłaszającego. Wysyłka następuje po commicie transakcji; błąd SMTP trafia do `storage/logs/app.log` i nie cofa kary. Temat i treść e-maila są zawsze po angielsku, niezależnie od języka interfejsu: to oficjalne orzeczenie FIA, a język odbiorcy (szefów zespołów) nie jest przechowywany w bazie. Podgląd: <http://localhost:8025>.
 
 ---
 
