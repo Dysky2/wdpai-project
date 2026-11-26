@@ -66,7 +66,7 @@ final class StewardController extends AbstractController
                 throw $e;
             }
 
-            // Opened by URL before the investigation started: explain instead of a bare 422 page.
+            // Opened by URL for a case that is not under investigation (new or already decided): explain instead of a bare 422 page.
             $this->session->addFlash('error', $this->view->t('flash.adjudicate_needs_investigation'));
 
             return Response::redirect('/incidents/' . $id);
