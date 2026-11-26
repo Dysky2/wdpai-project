@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Exception\ForbiddenException;
+use App\Exception\CsrfTokenException;
+use App\Http\CsrfTokenStoreInterface;
 use App\Http\Request;
 use App\Http\Response;
-use App\Http\Session;
 
-/** Requires a valid CSRF token (csrf_token field or X-CSRF-Token header) on every state-changing request. */
+/**
+ * Requires a valid CSRF token (csrf_token field or X-CSRF-Token header) on every state-changing request.
+ * On protected routes it runs after AuthMiddleware and before RoleMiddleware (401, then 403 csrf_invalid, then 403 forbidden).
+ */
 final class CsrfMiddleware implements MiddlewareInterface
 {
     private const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
-    public function __construct(private readonly Session $session)
+    public function __construct(private readonly CsrfTokenStoreInterface $tokens)
     {
     }
 
@@ -25,8 +28,8 @@ final class CsrfMiddleware implements MiddlewareInterface
         }
 
         $token = $request->getCsrfToken();
-        if (!is_string($token) || $token === '' || !hash_equals($this->session->csrfToken(), $token)) {
-            throw new ForbiddenException('Invalid CSRF token');
+        if (!is_string($token) || $token === '' || !hash_equals($this->tokens->csrfToken(), $token)) {
+            throw new CsrfTokenException();
         }
 
         return $next($request);

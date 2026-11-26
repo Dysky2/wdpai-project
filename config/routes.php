@@ -16,25 +16,26 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\CsrfMiddleware;
 use App\Middleware\RoleMiddleware;
 use App\Model\Role;
-use App\Service\AuthService;
+use App\Service\CurrentUserProviderInterface;
 
 return static function (Router $router, Container $container): void {
-    // Every POST needs a valid CSRF token (form field or X-CSRF-Token header).
-    $router->use(CsrfMiddleware::class);
-
+    // Every POST needs a valid CSRF token (form field or X-CSRF-Token header); CsrfMiddleware skips GET.
+    // Order on protected routes: session (401) -> CSRF (403 csrf_invalid) -> role (403 forbidden),
+    // so a guest gets 401 and a wrong token is never reported as a role problem.
     // Roles are assigned per route; ownership of a single case is checked in IncidentService::getForUser.
-    $authService = $container->get(AuthService::class);
-    $auth = [AuthMiddleware::class];
-    $principal = [AuthMiddleware::class, RoleMiddleware::for($authService, Role::TEAM_PRINCIPAL)];
-    $steward = [AuthMiddleware::class, RoleMiddleware::for($authService, Role::FIA_STEWARD)];
+    $users = $container->get(CurrentUserProviderInterface::class);
+    $csrf = [CsrfMiddleware::class];
+    $auth = [AuthMiddleware::class, CsrfMiddleware::class];
+    $principal = [AuthMiddleware::class, CsrfMiddleware::class, RoleMiddleware::for($users, Role::TEAM_PRINCIPAL)];
+    $steward = [AuthMiddleware::class, CsrfMiddleware::class, RoleMiddleware::for($users, Role::FIA_STEWARD)];
 
     $router->get('/', HomeController::class, 'index');
 
     $router->get('/lang/(pl|en)', LanguageController::class, 'switch');
 
     $router->get('/login', AuthController::class, 'login');
-    $router->post('/login', AuthController::class, 'login');
-    $router->post('/logout', AuthController::class, 'logout');
+    $router->post('/login', AuthController::class, 'login', $csrf);
+    $router->post('/logout', AuthController::class, 'logout', $csrf);
 
     $router->get('/incidents', IncidentController::class, 'index', $auth);
     // Static /incidents/create must be registered before /incidents/{id}.

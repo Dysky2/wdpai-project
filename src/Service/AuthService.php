@@ -8,7 +8,7 @@ use App\Http\Session;
 use App\Model\User;
 use App\Repository\UserRepositoryInterface;
 
-final class AuthService
+final class AuthService implements CurrentUserProviderInterface
 {
     private ?User $currentUser = null;
     private bool $currentUserLoaded = false;

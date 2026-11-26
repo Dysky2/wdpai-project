@@ -36,6 +36,8 @@ return [
     'error.401.message' => 'You need to log in to see this page.',
     'error.403.title' => 'Access denied',
     'error.403.message' => 'Your role does not allow this operation.',
+    'error.csrf.title' => 'Request could not be verified',
+    'error.csrf.message' => 'Invalid or missing CSRF token. Refresh the page and try again.',
     'error.404.title' => 'Page not found',
     'error.404.message' => 'The page does not exist or has been moved. Return to race control and pick another section.',
     'error.422.title' => 'Request cannot be processed',

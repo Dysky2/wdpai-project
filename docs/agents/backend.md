@@ -20,7 +20,7 @@
 ## 2. Przepływ i warstwy (K3, K28)
 
 ```text
-Request → Kernel → Router → Middleware (Csrf, Auth, Role) → Controller → Service → Repository → PostgreSQL
+Request → Kernel → Router → Middleware (Auth, Csrf, Role) → Controller → Service → Repository → PostgreSQL
                                                                     ├→ MailerService → SMTP
                                                                     └→ UploadService → filesystem
 Response ← HTML (ViewHelper) lub JsonResponse; wyjątki → Kernel → widok błędu lub JSON {"error":…}
@@ -115,7 +115,7 @@ public function issuePenalty(IssuePenaltyCommand $cmd, User $steward): Penalty
 - **Logowanie:** wyszukanie po e-mailu, `password_verify`; gdy użytkownika brak, weryfikuj względem stałego fałszywego hasha (wyrównanie czasu), jeden komunikat błędu. `password_needs_rehash` po sukcesie. Hash `PASSWORD_ARGON2ID`.
 - **Sesja (`Http/Session`):** `session_set_cookie_params` (`httponly`, `samesite=Lax`, `secure` gdy `APP_ENV=production`), `use_strict_mode`, `session_regenerate_id(true)` po logowaniu. W sesji tylko `user_id` i `lang`; użytkownika i rolę ładuj z bazy w `AuthMiddleware`.
 - **Wylogowanie (`POST /logout`):** `$_SESSION = []`, wygaszenie cookie z tymi samymi parametrami, `session_destroy()`, redirect na `/login`. Strony chronione z `Cache-Control: no-store, private`, żeby przycisk Wstecz nie ujawniał treści.
-- **CSRF:** `CsrfMiddleware` globalnie dla POST; token `random_bytes(32)` w sesji, odczyt z pola `csrf_token` lub nagłówka `X-CSRF-Token`, `hash_equals`; brak/błąd → 403.
+- **CSRF:** `CsrfMiddleware` w łańcuchu każdej trasy POST (`config/routes.php`); token `random_bytes(32)` w sesji, odczyt z pola `csrf_token` lub nagłówka `X-CSRF-Token`, `hash_equals`; brak/błąd → `CsrfTokenException` (403, kod `csrf_invalid`, teksty `error.csrf.title`/`error.csrf.message`, osobne od `forbidden` dla roli). Kolejność na trasach chronionych: `AuthMiddleware` (401) → `CsrfMiddleware` (403 `csrf_invalid`) → `RoleMiddleware` (403 `forbidden`); pilnuje tego `tests/Unit/Http/SecurityMiddlewareOrderTest.php`. Middleware zależą od interfejsów `CurrentUserProviderInterface` (`AuthService`) i `CsrfTokenStoreInterface` (`Session`).
 - **Autoryzacja:** `AuthMiddleware` (401) i `RoleMiddleware::for(Role::FIA_STEWARD)` (403) w definicji trasy, dodatkowo kontrola własności w serwisie (`TEAM_PRINCIPAL` widzi sprawę, jeśli jego zespół jest zgłaszającym lub zespołem oskarżonego kierowcy; inaczej 403). Brak sprawdzenia „tylko w widoku”.
 - Nagłówki i Nginx: patrz `infrastructure.md`; backend ustawia `Content-Type` i `no-store` tam, gdzie trzeba.
 

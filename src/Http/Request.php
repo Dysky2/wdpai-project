@@ -102,7 +102,9 @@ final class Request
 
     public function getCsrfToken(): ?string
     {
-        return $this->getParsedBody('csrf_token') 
-            ?? $this->getHeader('X-CSRF-Token');
+        // A non-string field (e.g. csrf_token[]=x) counts as missing, so it ends as 403 and not as a TypeError.
+        $field = $this->getParsedBody('csrf_token');
+
+        return is_string($field) ? $field : $this->getHeader('X-CSRF-Token');
     }
 }

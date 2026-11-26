@@ -9,7 +9,7 @@ use App\Exception\UnauthorizedException;
 use App\Http\Request;
 use App\Http\Response;
 use App\Model\Role;
-use App\Service\AuthService;
+use App\Service\CurrentUserProviderInterface;
 
 /** Allows only the listed roles; everyone else gets 403 (use after AuthMiddleware). */
 final class RoleMiddleware implements MiddlewareInterface
@@ -17,12 +17,12 @@ final class RoleMiddleware implements MiddlewareInterface
     /** @var list<Role> */
     private readonly array $roles;
 
-    public function __construct(private readonly AuthService $auth, Role ...$roles)
+    public function __construct(private readonly CurrentUserProviderInterface $auth, Role ...$roles)
     {
         $this->roles = array_values($roles);
     }
 
-    public static function for(AuthService $auth, Role ...$roles): self
+    public static function for(CurrentUserProviderInterface $auth, Role ...$roles): self
     {
         return new self($auth, ...$roles);
     }
