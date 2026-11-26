@@ -237,7 +237,7 @@ return [
     'validation.description_length' => 'The description must be between :min and :max characters long.',
     'validation.sanction_unknown' => 'Choose one of the available sanctions.',
     'validation.points_range' => 'Penalty points must be between 0 and :max.',
-    'validation.reason_length' => 'The reasoning is required (max. :max characters).',
+    'validation.reason_length' => 'The reasoning must be between :min and :max characters long.',
     'validation.evidence_too_large' => 'The file is too large (max. :max MB).',
     'validation.evidence_type' => 'Only genuine JPG or PNG images are allowed.',
     'validation.evidence_failed' => 'The file could not be uploaded. Please try again.',
@@ -270,7 +270,7 @@ return [
     // Texts used by scripts (embedded in the page as JSON)
     'js.adjudicate.article_required' => 'Choose an article.',
     'js.adjudicate.reason_required' => 'Enter the reasoning.',
-    'js.adjudicate.reason_max' => 'Max. :max characters.',
+    'js.adjudicate.reason_length' => 'The reasoning must be between :min and :max characters long.',
     'js.adjudicate.confirm' => 'Save the ruling and apply the penalty?',
     'js.adjudicate.confirm_label' => 'Save and apply',
     'js.adjudicate.points_group' => 'Change the number of penalty points',

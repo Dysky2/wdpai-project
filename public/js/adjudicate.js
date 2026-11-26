@@ -2,8 +2,6 @@ import { t } from './i18n.js';
 import { confirmDialog } from './modal.js';
 import { attachValidation, rules } from './validator.js';
 
-const REASON_MAX = 1000;
-
 export function initAdjudicateForm() {
     const form = document.querySelector('form[action^="/stewards/adjudicate/"]');
     if (!form) {
@@ -16,6 +14,9 @@ export function initAdjudicateForm() {
     const projected = form.querySelector('[data-projected-points]');
     const insertButton = form.querySelector('[data-insert-precedent]');
     const current = Number(points.dataset.currentPoints ?? 0);
+    // Limity uzasadnienia pochodzą z atrybutów minlength/maxlength (serwer: PenaltyService::REASON_MIN/MAX).
+    const reasonMin = Math.max(1, reason.minLength);
+    const reasonMax = reason.maxLength > 0 ? reason.maxLength : Number.MAX_SAFE_INTEGER;
 
     const clampPoints = () => Math.min(3, Math.max(0, Number.parseInt(points.value, 10) || 0));
 
@@ -65,7 +66,7 @@ export function initAdjudicateForm() {
     counter.setAttribute('aria-live', 'polite');
     reason.closest('.form-field').append(counter);
     const updateCounter = () => {
-        counter.textContent = `${reason.value.length} / ${REASON_MAX}`;
+        counter.textContent = `${reason.value.length} / ${reasonMax}`;
     };
     reason.addEventListener('input', updateCounter);
     updateCounter();
@@ -73,7 +74,10 @@ export function initAdjudicateForm() {
     attachValidation(form, [
         [article, [rules.required(t('js.adjudicate.article_required'))]],
         [points, [rules.required('Podaj punkty karne.'), rules.range(0, 3, 'Punkty karne: od 0 do 3.')]],
-        [reason, [rules.required(t('js.adjudicate.reason_required')), rules.length(1, REASON_MAX, t('js.adjudicate.reason_max', { max: REASON_MAX }))]],
+        [reason, [
+            rules.required(t('js.adjudicate.reason_required')),
+            rules.length(reasonMin, reasonMax, t('js.adjudicate.reason_length', { min: reasonMin, max: reasonMax })),
+        ]],
     ]);
 
     // Potwierdzenie w modalu przed zapisem kary; po zatwierdzeniu formularz jest wysyłany zwykłym submitem.

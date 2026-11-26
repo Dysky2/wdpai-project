@@ -63,9 +63,13 @@ final class PenaltyServiceTest extends TestCase
         );
     }
 
-    private function command(int $points = 2, bool $notify = false, string $sanction = 'TIME_PENALTY:5'): IssuePenaltyCommand
-    {
-        return new IssuePenaltyCommand(self::INCIDENT, 1, $sanction, $points, 'Wymuszenie kolizji.', $notify);
+    private function command(
+        int $points = 2,
+        bool $notify = false,
+        string $sanction = 'TIME_PENALTY:5',
+        string $reason = 'Wymuszenie kolizji w zakręcie 1.',
+    ): IssuePenaltyCommand {
+        return new IssuePenaltyCommand(self::INCIDENT, 1, $sanction, $points, $reason, $notify);
     }
 
     /** Gives the driver an active penalty worth $points (issued earlier, still within 365 days). */
@@ -212,6 +216,66 @@ final class PenaltyServiceTest extends TestCase
 
         self::assertSame([], $this->penalties->rows);
         self::assertSame(0, $this->transactions->commits);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function acceptedReasons(): array
+    {
+        return [
+            'exactly the minimum' => [str_repeat('a', PenaltyService::REASON_MIN)],
+            'exactly the maximum' => [str_repeat('a', PenaltyService::REASON_MAX)],
+            'twenty Polish letters' => [str_repeat('ą', PenaltyService::REASON_MIN)],
+            'minimum after trimming' => ['  ' . str_repeat('ż', PenaltyService::REASON_MIN) . "\n "],
+        ];
+    }
+
+    #[DataProvider('acceptedReasons')]
+    public function testReasonWithinLimitsIsAccepted(string $reason): void
+    {
+        $this->service()->issuePenalty($this->command(reason: $reason), Fixtures::steward());
+
+        self::assertCount(1, $this->penalties->rows);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function rejectedReasons(): array
+    {
+        return [
+            'single letter' => ['a'],
+            'one below the minimum' => [str_repeat('a', PenaltyService::REASON_MIN - 1)],
+            'nineteen Polish letters' => [str_repeat('ą', PenaltyService::REASON_MIN - 1)],
+            'short text padded with spaces' => [str_repeat(' ', 30) . 'krótko' . str_repeat(' ', 30)],
+            'only spaces' => [str_repeat(' ', PenaltyService::REASON_MAX)],
+            'empty' => [''],
+            'one above the maximum' => [str_repeat('a', PenaltyService::REASON_MAX + 1)],
+            'invalid UTF-8' => [str_repeat("\xC3\x28", PenaltyService::REASON_MIN)],
+        ];
+    }
+
+    #[DataProvider('rejectedReasons')]
+    public function testReasonOutsideLimitsIsRejectedWithTranslatedLengthError(string $reason): void
+    {
+        try {
+            $this->service()->issuePenalty($this->command(reason: $reason), Fixtures::steward());
+            self::fail('ValidationException expected');
+        } catch (ValidationException $e) {
+            self::assertSame(
+                [
+                    'key' => 'validation.reason_length',
+                    'params' => ['min' => PenaltyService::REASON_MIN, 'max' => PenaltyService::REASON_MAX],
+                ],
+                $e->getErrors()['reason'] ?? null,
+            );
+        }
+
+        self::assertSame([], $this->penalties->rows);
+        self::assertSame(0, $this->transactions->commits);
+    }
+
+    public function testReasonLimitsAreTwentyToOneThousandCharacters(): void
+    {
+        self::assertSame(20, PenaltyService::REASON_MIN);
+        self::assertSame(1000, PenaltyService::REASON_MAX);
     }
 
     public function testPointsLeaveTheBalanceAfterTheyExpire(): void
