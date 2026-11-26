@@ -157,7 +157,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | GET, POST | `/login` | `AuthController::login` |
 | POST | `/logout` | `AuthController::logout` |
 | GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
-| GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` |
+| GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` (protest można złożyć tylko dla aktywnego Grand Prix: lista wyboru zawiera wyłącznie je, a serwer odrzuca każde inne `grand_prix_id` błędem 422 `validation.grand_prix_unknown`) |
 | GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
 | GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` (formularz orzekania z presetami artykułów z bazy i prognozą punktów; sprawa musi być `UNDER_INVESTIGATION`, inaczej 422; zapis kary w S3-17) |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |

@@ -23,6 +23,7 @@ use AppTestsSupportixedlanguage;
 use App\Tests\Support\InMemoryArticleRepository;
 use App\Tests\Support\InMemoryDriverRepository;
 use App\Tests\Support\InMemoryEvidenceRepository;
+use App\Model\GrandPrix;
 use App\Tests\Support\InMemoryGrandPrixRepository;
 use App\Tests\Support\InMemoryIncidentRepository;
 use App\Tests\Support\InMemoryTeamRepository;
@@ -50,9 +51,14 @@ final class IncidentServiceTest extends TestCase
         $this->evidence = new InMemoryEvidenceRepository();
         $this->transactions = new FakeTransactionRunner($this->incidents, $this->evidence);
 
-        $this->service = new IncidentService(
+        $this->service = $this->buildService(Fixtures::grandPrix(1, 57));
+    }
+
+    private function buildService(GrandPrix $grandPrix): IncidentService
+    {
+        return new IncidentService(
             $this->createStub(IncidentListRepositoryInterface::class),
-            new InMemoryGrandPrixRepository(Fixtures::grandPrix(1, 57)),
+            new InMemoryGrandPrixRepository($grandPrix),
             $this->createStub(IncidentDetailRepositoryInterface::class),
             $this->incidents,
             $this->transactions,
@@ -144,6 +150,16 @@ final class IncidentServiceTest extends TestCase
         $errors = $this->errorsOf(fn () => $this->service->report(Fixtures::principal(), $this->command(description: 'za krótko')));
 
         self::assertSame('validation.description_length', $errors['description']['key']);
+    }
+
+    public function testProtestForAnInactiveGrandPrixIsRejected(): void
+    {
+        $inactive = new GrandPrix(1, 'Bahrain GP', 'Sakhir', 'BH', 2026, 1, Fixtures::now(), 57, false);
+        $service = $this->buildService($inactive);
+
+        $errors = $this->errorsOf(fn () => $service->report(Fixtures::principal(), $this->command()));
+
+        self::assertSame('validation.grand_prix_unknown', $errors['grand_prix_id']['key']);
     }
 
     public function testStewardCannotFileAProtest(): void
