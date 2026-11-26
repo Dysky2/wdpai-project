@@ -209,7 +209,22 @@ Audyt ręczny kodu (2026-11-18): klawiatura (link „Przejdź do treści” z ce
 
 Kontrast (obliczony wg WCAG, min. 4.5:1): tekst 16.8:1 (jasny) / 15.2:1 (ciemny), tekst pomocniczy 5.7–6.7:1 / 5.5–6.6:1, przycisk główny 4.97:1, odznaki statusów 6.3–8.4:1 (jasny) / 7.2–8.5:1 (ciemny), tekst akcentowy 4.6:1 / 5.6:1.
 
-> Raport Lighthouse (wynik, data, zrzut) zostanie dopisany po uruchomieniu audytu na działającej aplikacji.
+**Raport Lighthouse (kategoria Accessibility), 2026-11-26.** Lighthouse 12.6.1 uruchomiony przez Edge (headless) na lokalnej aplikacji; strony chronione z ciasteczkiem sesji stewarda lub szefa zespołu. Pełne raporty HTML (z listą zaliczonych audytów) leżą w [`docs/wcag/`](docs/wcag/).
+
+| Ekran | Urządzenie | Wynik | Niezaliczone audyty |
+|---|---|---|---|
+| `/login` | desktop | 100 | 0 |
+| `/login` | mobile (375 px) | 100 | 0 |
+| `/incidents` (steward) | desktop | 100 | 0 |
+| `/incidents` (steward) | mobile | 100 | 0 |
+| `/incidents/{id}` (steward) | mobile | 100 | 0 |
+| `/incidents/create` (szef zespołu) | desktop | 100 | 0 |
+| `/standings` (steward) | desktop | 100 | 0 |
+| `/stewards/adjudicate/{id}` (steward) | desktop | 100 | 0 |
+
+**Naprawione uwagi:** pierwszy przebieg wykazał w nagłówku audyt `label-content-name-mismatch` (WCAG 2.5.3): `aria-label` logo („F1 Stewards, strona główna”) nie zawierał widocznego hasła „Portal zarządzania incydentami”. Etykieta (`app.brand_aria` w `config/lang/pl.php` i `en.php`) zawiera teraz całą widoczną treść logo i po poprawce wszystkie ekrany mają 0 niezaliczonych audytów.
+
+Ograniczenia: Lighthouse sprawdza automatycznie tylko część kryteriów WCAG. Nawigacja klawiaturą, czytnik ekranu i przełączanie motywu nie były tu testowane przeglądarkowo (opis ręcznego audytu kodu powyżej).
 
 ---
 

@@ -7,7 +7,7 @@ return [
     // Layout, navigation, footer
     'app.name' => 'ApexSteward',
     'app.skip_to_content' => 'Skip to content',
-    'app.brand_aria' => 'F1 Stewards, home page',
+    'app.brand_aria' => 'F1 STEWARDS Incident Management Portal, home page',
     'app.brand_title' => 'F1 STEWARDS',
     'app.brand_tagline' => 'Incident Management Portal',
     'app.footer_left' => 'ApexSteward · FIA Stewards Hub',
