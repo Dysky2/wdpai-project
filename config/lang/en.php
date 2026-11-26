@@ -228,6 +228,7 @@ return [
     'adjudicate.submit' => 'Save and apply the penalty',
 
     // Validation messages (422)
+    'validation.api_query' => 'Invalid value for parameter ":param".',
     'validation.grand_prix_unknown' => 'Choose an existing Grand Prix session.',
     'validation.lap_range' => 'The lap number must be between 1 and :max.',
     'validation.accused_unknown' => 'Choose the accused driver from the list.',

@@ -700,3 +700,20 @@ img {
     border-color: var(--accent-soft);
     font-weight: 700;
 }
+
+/* Touch targets: at least 44 x 44 px for the header controls on touch screens (WCAG 2.5.5). */
+@media (pointer: coarse), (max-width: 768px) {
+    .theme-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .lang-switch__link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 0.6rem;
+    }
+}
