@@ -76,7 +76,7 @@ final class IncidentService
         return new ReportForm(
             $team,
             $user->getDisplayName(),
-            $this->grandsPrix->findAll(),
+            $this->activeGrandsPrix(),
             $this->grandsPrix->findActive(),
             array_values(array_filter($this->drivers->findAll(), static fn ($d): bool => $d->getTeamId() !== $teamId)),
             $this->drivers->findByTeamId($teamId),
@@ -147,13 +147,23 @@ final class IncidentService
         }
     }
 
+    /** @return list<\App\Model\GrandPrix> the only Grand Prix a protest may be filed for */
+    private function activeGrandsPrix(): array
+    {
+        return array_values(array_filter(
+            $this->grandsPrix->findAll(),
+            static fn (\App\Model\GrandPrix $gp): bool => $gp->isActive(),
+        ));
+    }
+
     /** @return array<string, array{key: string, params: array<string, scalar>}> */
     private function validateReport(int $teamId, ReportIncidentCommand $cmd): array
     {
         $errors = [];
         $grandPrix = $cmd->grandPrixId > 0 ? $this->grandsPrix->findById($cmd->grandPrixId) : null;
 
-        if ($grandPrix === null) {
+        // Protests can only be filed for the active Grand Prix; any other id is treated as unknown.
+        if ($grandPrix === null || !$grandPrix->isActive()) {
             $errors['grand_prix_id'] = ['key' => 'validation.grand_prix_unknown', 'params' => []];
         } elseif ($cmd->lapNumber < 1 || $cmd->lapNumber > $grandPrix->getTotalLaps()) {
             $errors['lap_number'] = ['key' => 'validation.lap_range', 'params' => ['max' => $grandPrix->getTotalLaps()]];
