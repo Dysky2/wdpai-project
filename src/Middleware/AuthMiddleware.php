@@ -7,12 +7,12 @@ namespace App\Middleware;
 use App\Exception\UnauthorizedException;
 use App\Http\Request;
 use App\Http\Response;
-use App\Service\AuthService;
+use App\Service\CurrentUserProviderInterface;
 
 /** Lets only logged-in users through: HTML gets a redirect to /login, /api/* gets 401 JSON. */
 final class AuthMiddleware implements MiddlewareInterface
 {
-    public function __construct(private readonly AuthService $auth)
+    public function __construct(private readonly CurrentUserProviderInterface $auth)
     {
     }
 

@@ -99,10 +99,16 @@ final class Router
         try {
             return $this->handle($request);
         } catch (HttpException $e) {
-            return $this->errorResponse($request, $e->getStatusCode(), $e->getErrorCode(), $e->getMessage());
+            return $this->errorResponse(
+                $request,
+                $e->getStatusCode(),
+                $e->getErrorCode(),
+                $e->getMessage(),
+                $e->getTranslationPrefix(),
+            );
         } catch (\Throwable $e) {
             error_log($e::class . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            return $this->errorResponse($request, 500, 'server_error', 'Internal server error');
+            return $this->errorResponse($request, 500, 'server_error', 'Internal server error', 'error.500');
         }
     }
 
@@ -202,25 +208,38 @@ final class Router
         return $this->container?->get($class) ?? new $class();
     }
 
-    private function errorResponse(Request $request, int $status, string $code, string $message): Response
-    {
+    /** $textPrefix selects the translated texts, e.g. "error.403" (role) or "error.csrf" (token). */
+    private function errorResponse(
+        Request $request,
+        int $status,
+        string $code,
+        string $message,
+        string $textPrefix,
+    ): Response {
         if (str_starts_with($request->getPath(), '/api/')) {
             // Never leak internals of server errors to API clients; known statuses get a translated message.
-            $publicMessage = $this->translatedError($status) ?? ($status >= 500 ? 'Internal server error' : $message);
+            $publicMessage = $this->translatedError($status, $textPrefix)
+                ?? ($status >= 500 ? 'Internal server error' : $message);
             return new JsonResponse(['error' => ['code' => $code, 'message' => $publicMessage]], $status);
         }
 
-        return $this->resolve(ErrorController::class)->show($status);
+        return $this->resolve(ErrorController::class)->show($status, $textPrefix);
     }
 
-    private function translatedError(int $status): ?string
+    private function translatedError(int $status, string $textPrefix): ?string
     {
         if ($this->container === null || !in_array($status, [400, 401, 403, 404, 422, 500], true)) {
             return null;
         }
 
         try {
-            return $this->container->get(Translator::class)->translate('error.' . $status . '.message');
+            $key = $textPrefix . '.message';
+            $text = $this->container->get(Translator::class)->translate($key);
+
+            // A missing key comes back unchanged; fall back to the generic text of the status.
+            return $text !== $key
+                ? $text
+                : $this->container->get(Translator::class)->translate('error.' . $status . '.message');
         } catch (\Throwable) {
             return null;
         }

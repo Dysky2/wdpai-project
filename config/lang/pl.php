@@ -36,6 +36,8 @@ return [
     'error.401.message' => 'Aby zobaczyć tę stronę, musisz się zalogować.',
     'error.403.title' => 'Brak dostępu',
     'error.403.message' => 'Twoja rola nie pozwala na wykonanie tej operacji.',
+    'error.csrf.title' => 'Nie można zweryfikować żądania',
+    'error.csrf.message' => 'Nieprawidłowy lub brakujący token CSRF. Odśwież stronę i spróbuj ponownie.',
     'error.404.title' => 'Nie znaleziono strony',
     'error.404.message' => 'Wybrana strona nie istnieje albo została przeniesiona. Wróć do centrum dowodzenia i wybierz inną sekcję.',
     'error.422.title' => 'Nie można przetworzyć żądania',

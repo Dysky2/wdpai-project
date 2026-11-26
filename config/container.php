@@ -12,9 +12,11 @@ use App\Core\Database;
 use App\Core\SystemClock;
 use App\Core\Translator;
 use App\Core\TransactionRunnerInterface;
+use App\Http\CsrfTokenStoreInterface;
 use App\Http\Router;
 use App\Http\Session;
 use App\Service\AuthService;
+use App\Service\CurrentUserProviderInterface;
 use App\Service\PenaltyService;
 use App\Service\Mail\MailerInterface;
 use App\Service\Mail\MailSettings;
@@ -93,6 +95,9 @@ $container->singleton(
     AuthService::class,
     static fn (Container $c): AuthService => new AuthService($c->get(UserRepositoryInterface::class), $c->get(Session::class)),
 );
+
+$container->singleton(CurrentUserProviderInterface::class, static fn (Container $c): object => $c->get(AuthService::class));
+$container->singleton(CsrfTokenStoreInterface::class, static fn (Container $c): object => $c->get(Session::class));
 
 $container->singleton(
     UploadService::class,

@@ -28,4 +28,10 @@ class HttpException extends \RuntimeException
     {
         return $this->errorCode;
     }
+
+    /** Translation key prefix of the user-facing texts ("<prefix>.title", "<prefix>.message"). */
+    public function getTranslationPrefix(): string
+    {
+        return 'error.' . $this->statusCode;
+    }
 }

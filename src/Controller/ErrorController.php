@@ -20,10 +20,14 @@ final class ErrorController extends AbstractController
         parent::__construct($view);
     }
 
-    public function show(int $status): Response
+    /** Only the texts listed here may replace the generic ones of a status (e.g. CSRF instead of the role message). */
+    private const TEXT_PREFIXES = ['error.csrf'];
+
+    public function show(int $status, ?string $textPrefix = null): Response
     {
         $key = in_array($status, self::STATUSES, true) ? $status : 500;
-        $title = $this->view->t('error.' . $key . '.title');
+        $prefix = in_array($textPrefix, self::TEXT_PREFIXES, true) ? $textPrefix : 'error.' . $key;
+        $title = $this->view->t($prefix . '.title');
 
         // The error page must still render when the failure came from the session or database.
         try {
@@ -37,7 +41,7 @@ final class ErrorController extends AbstractController
             'pageClass' => 'page--centered',
             'status' => $status,
             'title' => $title,
-            'description' => $this->view->t('error.' . $key . '.message'),
+            'description' => $this->view->t($prefix . '.message'),
         ])->setStatusCode($status);
     }
 }
