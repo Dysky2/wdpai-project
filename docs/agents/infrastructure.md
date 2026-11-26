@@ -55,11 +55,9 @@ server {
     index index.php;
     client_max_body_size 6m;               # upload 5 MB + narzut multipart
 
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header Referrer-Policy "same-origin" always;
-    # CSP dostosuj po powstaniu stylów/JS (brak inline poza skryptem anty-FOUC: użyj hasha lub nonce):
-    # add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'" always;
+    server_tokens off;
+    # Komplet nagłówków bezpieczeństwa (CSP, X-Frame-Options, nosniff, Referrer-Policy, ...) z `always`.
+    include /etc/nginx/snippets/security-headers.conf;
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -79,13 +77,28 @@ server {
     location ^~ /uploads/ {
         default_type application/octet-stream;
         types { image/jpeg jpg jpeg; image/png png; }
-        add_header X-Content-Type-Options "nosniff" always;
+        include /etc/nginx/snippets/security-headers.conf;   # powtórzone celowo, patrz niżej
         try_files $uri =404;
     }
 
     location ~ /\.(?!well-known) { deny all; }
 }
 ```
+
+**Nagłówki bezpieczeństwa (`docker/nginx/security-headers.conf`, kopiowany w `docker/nginx/Dockerfile` do `/etc/nginx/snippets/`):**
+`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (aplikacja nigdy nie osadza własnych stron w ramce, więc `SAMEORIGIN` jest zbędne; odpowiada `frame-ancestors 'none'`), `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (kamera, mikrofon, geolokalizacja, płatności, USB wyłączone), `Cross-Origin-Opener-Policy: same-origin` oraz:
+
+```text
+Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-<LF>' 'sha256-<CRLF>'; style-src 'self';
+  img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self';
+  form-action 'self'; frame-ancestors 'none'
+```
+
+Zasady:
+- `add_header` w `location` **nie dziedziczy** nagłówków z `server`, jeśli `location` ma choć jedno własne `add_header`. Dlatego snippet dołącza się na poziomie `server` i ponownie w każdej `location` z własnymi nagłówkami. `always` dodaje nagłówki także do odpowiedzi 4xx/5xx (`return 404`, `deny all`, 502 z FastCGI).
+- Jedyny skrypt inline to anty-FOUC w `public/views/layout.html.php` (musi być synchroniczny w `<head>`). Jest dopuszczony hashem SHA-256 w dwóch wariantach: zakończenia linii LF (klon na Linuksie/serwerze) i CRLF (Windows z `core.autocrlf=true`, bind-mount `.:/app`). **Każda zmiana tego skryptu (nawet wcięcia) wymaga przeliczenia obu hashy**, inaczej przeglądarka go zablokuje i motyw z `localStorage` nie zostanie zastosowany przed renderem (FOUC). Hash z serwowanej strony: treść między `<script>` a `</script>` → SHA-256 → base64.
+- `<script type="application/json" id="i18n-data">` to blok danych (niewykonywany), CSP go nie dotyczy. Widoki nie mają atrybutów `style=` ani `<style>`; inline style są tylko w szablonach e-maili (`public/views/emails/`), których przeglądarka nie dostaje z serwera.
+- Weryfikacja: `curl -s -D - -o /dev/null localhost:8080/<ścieżka>` (router nie obsługuje `HEAD`, więc `curl -I` na trasach aplikacji daje 404) dla `/login`, `/incidents` (302), `/api/incidents` (401), nieistniejącej strony (404), `/views/layout.html.php` (404), `/.env` (403) i pliku z `/uploads/`.
 
 Dlaczego to ważne: szablony leżą w `public/views/*.html.php`. Bez reguły „tylko `/index.php`” żądanie `GET /views/layout.html.php` wykonałoby szablon bezpośrednio (niezdefiniowane zmienne, ujawnione ścieżki). Po wdrożeniu reguły sprawdź: `curl -i localhost:8080/views/layout.html.php` → 404.
 
