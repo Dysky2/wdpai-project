@@ -154,6 +154,27 @@ final class UploadServiceTest extends TestCase
         self::assertSame('validation.evidence_failed', $error->getErrorKey());
     }
 
+    public function testStoredFileCanBeLocatedByItsName(): void
+    {
+        $stored = $this->service->store($this->upload($this->tmpFile($this->jpeg()), 'onboard.jpg'));
+        $name = basename($stored->filePath);
+
+        self::assertTrue($this->service->isStoredName($name));
+        self::assertTrue($this->service->exists($name));
+        self::assertSame('image/jpeg', $this->service->mimeTypeOf($name));
+    }
+
+    public function testForeignNameIsNotAStoredFile(): void
+    {
+        file_put_contents($this->dir . '/target/shell.php', '<?php');
+
+        self::assertFalse($this->service->isStoredName('shell.php'));
+        self::assertFalse($this->service->exists('shell.php'));
+        self::assertFalse($this->service->exists('../target/shell.php'));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service->mimeTypeOf('shell.php');
+    }
+
     public function testDeleteRemovesAStoredFile(): void
     {
         $stored = $this->service->store($this->upload($this->tmpFile($this->png()), 'a.png'));

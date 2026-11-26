@@ -20,6 +20,17 @@ final class InMemoryEvidenceRepository implements EvidenceRepositoryInterface, R
         return array_values(array_filter($this->rows, static fn (Evidence $e): bool => $e->getIncidentId() === $incidentId));
     }
 
+    public function findByFilePath(string $filePath): ?Evidence
+    {
+        foreach ($this->rows as $evidence) {
+            if ($evidence->getFilePath() === $filePath) {
+                return $evidence;
+            }
+        }
+
+        return null;
+    }
+
     public function save(Evidence $evidence): Evidence
     {
         if ($this->failOnSave !== null) {

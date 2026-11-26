@@ -73,12 +73,19 @@ server {
     # Każdy inny plik .php (w tym szablony *.html.php) = 404, nigdy wykonanie.
     location ~ \.php$ { return 404; }
 
-    # Uploady: tylko statyczne, bez wykonywania czegokolwiek.
+    # Dowody NIE są serwowane statycznie: każde /uploads/ idzie do front controllera
+    # (EvidenceController: sesja → własność sprawy → 401/403/404 albo 200 z X-Accel-Redirect).
     location ^~ /uploads/ {
+        location ~* \.php$ { return 404; }
+        rewrite ^ /index.php last;
+    }
+
+    # Osiągalne wyłącznie przez X-Accel-Redirect z PHP; bezpośrednie żądanie = 404.
+    location ^~ /_protected/uploads/ {
+        internal;
+        alias /app/public/uploads/;
+        types { image/png png; image/jpeg jpg; }
         default_type application/octet-stream;
-        types { image/jpeg jpg jpeg; image/png png; }
-        include /etc/nginx/snippets/security-headers.conf;   # powtórzone celowo, patrz niżej
-        try_files $uri =404;
     }
 
     location ~ /\.(?!well-known) { deny all; }
@@ -98,7 +105,8 @@ Zasady:
 - `add_header` w `location` **nie dziedziczy** nagłówków z `server`, jeśli `location` ma choć jedno własne `add_header`. Dlatego snippet dołącza się na poziomie `server` i ponownie w każdej `location` z własnymi nagłówkami. `always` dodaje nagłówki także do odpowiedzi 4xx/5xx (`return 404`, `deny all`, 502 z FastCGI).
 - Jedyny skrypt inline to anty-FOUC w `public/views/layout.html.php` (musi być synchroniczny w `<head>`). Jest dopuszczony hashem SHA-256 w dwóch wariantach: zakończenia linii LF (klon na Linuksie/serwerze) i CRLF (Windows z `core.autocrlf=true`, bind-mount `.:/app`). **Każda zmiana tego skryptu (nawet wcięcia) wymaga przeliczenia obu hashy**, inaczej przeglądarka go zablokuje i motyw z `localStorage` nie zostanie zastosowany przed renderem (FOUC). Hash z serwowanej strony: treść między `<script>` a `</script>` → SHA-256 → base64.
 - `<script type="application/json" id="i18n-data">` to blok danych (niewykonywany), CSP go nie dotyczy. Widoki nie mają atrybutów `style=` ani `<style>`; inline style są tylko w szablonach e-maili (`public/views/emails/`), których przeglądarka nie dostaje z serwera.
-- Weryfikacja: `curl -s -D - -o /dev/null localhost:8080/<ścieżka>` (router nie obsługuje `HEAD`, więc `curl -I` na trasach aplikacji daje 404) dla `/login`, `/incidents` (302), `/api/incidents` (401), nieistniejącej strony (404), `/views/layout.html.php` (404), `/.env` (403) i pliku z `/uploads/`.
+- Weryfikacja: `curl -s -D - -o /dev/null localhost:8080/<ścieżka>` (router nie obsługuje `HEAD`, więc `curl -I` na trasach aplikacji daje 404) dla `/login`, `/incidents` (302), `/api/incidents` (401), nieistniejącej strony (404), `/views/layout.html.php` (404), `/.env` (403) i pliku z `/uploads/` (anonim 401, cudzy zespół 403, uprawniony 200 `image/png` z `Cache-Control: private, no-store`; `/_protected/uploads/…` z zewnątrz 404).
+- Dowody są chronione sesją: plik leży w `public/uploads/`, ale nginx nigdy nie wydaje go bez decyzji PHP. `EvidenceController` zwraca pustą odpowiedź z `X-Accel-Redirect: /_protected/uploads/<nazwa>`, `Content-Type` i `Cache-Control`; nginx zachowuje te nagłówki i dokłada snippet bezpieczeństwa z poziomu `server` (lokalizacja `internal` nie ma własnych `add_header`).
 
 Dlaczego to ważne: szablony leżą w `public/views/*.html.php`. Bez reguły „tylko `/index.php`” żądanie `GET /views/layout.html.php` wykonałoby szablon bezpośrednio (niezdefiniowane zmienne, ujawnione ścieżki). Po wdrożeniu reguły sprawdź: `curl -i localhost:8080/views/layout.html.php` → 404.
 
