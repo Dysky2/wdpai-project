@@ -229,6 +229,7 @@ return [
 
     // Validation messages (422)
     'validation.grand_prix_unknown' => 'Wybierz istniejącą sesję Grand Prix.',
+    'validation.api_query' => 'Nieprawidłowa wartość parametru „:param”.',
     'validation.lap_range' => 'Numer okrążenia musi mieścić się w zakresie 1–:max.',
     'validation.accused_unknown' => 'Wybierz oskarżonego kierowcę z listy.',
     'validation.accused_own_team' => 'Nie można oskarżyć kierowcy własnego zespołu.',

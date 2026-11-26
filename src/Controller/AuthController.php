@@ -54,7 +54,9 @@ final class AuthController extends AbstractController
             $this->audit->logFailure($email, $request->getClientIp(), 'locked_out');
             $message = $this->view->t('login.locked', ['minutes' => $this->throttle->minutesUntilUnlock($email)]);
 
-            return $this->renderLogin($email, $message)->setStatusCode(429);
+            return $this->renderLogin($email, $message)
+                ->setStatusCode(429)
+                ->setHeader('Retry-After', (string) ($this->throttle->minutesUntilUnlock($email) * 60));
         }
 
         $user = $this->auth->attempt($email, $password);

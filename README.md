@@ -161,7 +161,7 @@ Trasy są zdefiniowane w `config/routes.php`.
 | GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
 | GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` (formularz orzekania z presetami artykułów z bazy i prognozą punktów; sprawa musi być `UNDER_INVESTIGATION`, inaczej 422; zapis kary w S3-17) |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
-| GET | `/api/incidents` | `ApiIncidentController::index` (JSON `{data: [IncidentRow], meta: {page, perPage, total}}`, te same query i zakres co `/incidents`) |
+| GET | `/api/incidents` | `ApiIncidentController::index` (JSON `{data: [IncidentRow], meta: {page, perPage, total}}`, te same query i zakres co `/incidents`; błędne `status`, `gp` lub `page` → 422 w kontrakcie błędów, `perPage` jest stałe po stronie serwera, a `page` większe niż ostatnia strona jest przycinane do ostatniej) |
 | POST | `/api/incidents/{id}/investigate` | `ApiIncidentController::investigate` (tylko `FIA_STEWARD`, nagłówek `X-CSRF-Token`; `REPORTED` → `UNDER_INVESTIGATION`) |
 | POST | `/api/incidents/{id}/dismiss` | `ApiIncidentController::dismiss` (tylko `FIA_STEWARD`; `UNDER_INVESTIGATION` → `NO_FURTHER_ACTION`) |
 
