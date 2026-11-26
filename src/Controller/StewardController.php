@@ -82,6 +82,8 @@ final class StewardController extends AbstractController
             'defaultPoints' => isset($old['points']) ? (int) $old['points'] : $form->getDefaultPoints(),
             'currentPoints' => $form->getCurrentPoints(),
             'projectedPoints' => $form->getProjectedPoints(),
+            'reasonMin' => PenaltyService::REASON_MIN,
+            'reasonMax' => PenaltyService::REASON_MAX,
             'old' => $old,
             'errors' => $errors,
         ]);

@@ -237,7 +237,7 @@ return [
     'validation.description_length' => 'Opis musi mieć od :min do :max znaków.',
     'validation.sanction_unknown' => 'Wybierz jedną z dostępnych sankcji.',
     'validation.points_range' => 'Punkty karne muszą mieścić się w zakresie 0–:max.',
-    'validation.reason_length' => 'Uzasadnienie jest wymagane (maks. :max znaków).',
+    'validation.reason_length' => 'Uzasadnienie musi mieć od :min do :max znaków.',
     'validation.evidence_too_large' => 'Plik jest za duży (maks. :max MB).',
     'validation.evidence_type' => 'Dozwolone są wyłącznie prawdziwe obrazy JPG lub PNG.',
     'validation.evidence_failed' => 'Nie udało się wgrać pliku. Spróbuj ponownie.',
@@ -270,7 +270,7 @@ return [
     // Texts used by scripts (embedded in the page as JSON)
     'js.adjudicate.article_required' => 'Wybierz artykuł.',
     'js.adjudicate.reason_required' => 'Podaj uzasadnienie.',
-    'js.adjudicate.reason_max' => 'Maks. :max znaków.',
+    'js.adjudicate.reason_length' => 'Uzasadnienie musi mieć od :min do :max znaków.',
     'js.adjudicate.confirm' => 'Zapisać orzeczenie i zastosować karę?',
     'js.adjudicate.confirm_label' => 'Zapisz i zastosuj',
     'js.adjudicate.points_group' => 'Zmień liczbę punktów karnych',

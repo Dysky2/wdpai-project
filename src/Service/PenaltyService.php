@@ -28,6 +28,8 @@ use App\Service\Mail\MailerInterface;
  */
 final class PenaltyService
 {
+    /** Written reasoning length in UTF-8 characters after trimming (the form and the script read the same limits). */
+    public const REASON_MIN = 20;
     public const REASON_MAX = 1000;
 
     public function __construct(
@@ -162,9 +164,13 @@ final class PenaltyService
             $errors['points'] = ['key' => 'validation.points_range', 'params' => ['max' => PenaltyPolicy::MAX_POINTS_PER_PENALTY]];
         }
 
-        $length = mb_strlen($cmd->reason);
-        if (!mb_check_encoding($cmd->reason, 'UTF-8') || $length < 1 || $length > self::REASON_MAX) {
-            $errors['reason'] = ['key' => 'validation.reason_length', 'params' => ['max' => self::REASON_MAX]];
+        $reason = trim($cmd->reason);
+        $length = mb_check_encoding($reason, 'UTF-8') ? mb_strlen($reason, 'UTF-8') : -1;
+        if ($length < self::REASON_MIN || $length > self::REASON_MAX) {
+            $errors['reason'] = [
+                'key' => 'validation.reason_length',
+                'params' => ['min' => self::REASON_MIN, 'max' => self::REASON_MAX],
+            ];
         }
 
         if ($errors !== [] || $sanction === null) {

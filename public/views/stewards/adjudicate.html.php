@@ -73,9 +73,9 @@
             <?php endif; ?>
         </div>
 
-        <div class="form-field">
+        <div class="form-field<?= isset($errors['reason']) ? ' form-field--invalid' : '' ?>">
             <label for="reason"><?= $view->te('adjudicate.reason') ?></label>
-            <textarea id="reason" name="reason" rows="6" maxlength="1000" required<?= isset($errors['reason']) ? ' aria-invalid="true" aria-describedby="reason-error"' : '' ?>><?= $view->e($old['reason'] ?? '') ?></textarea>
+            <textarea id="reason" name="reason" rows="6" minlength="<?= (int) $reasonMin ?>" maxlength="<?= (int) $reasonMax ?>" required<?= isset($errors['reason']) ? ' aria-invalid="true" aria-describedby="reason-error"' : '' ?>><?= $view->e($old['reason'] ?? '') ?></textarea>
             <?php if (isset($errors['reason'])): ?>
                 <p class="form-field__error" id="reason-error"><?= $view->e($errors['reason']) ?></p>
             <?php endif; ?>
