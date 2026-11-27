@@ -41,7 +41,8 @@ services:
       - uploads:/app/public/uploads:ro
       - certs:/certs:ro
     depends_on:
-      - php
+      php:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network
@@ -56,6 +57,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # Ready = PHP-FPM accepts connections on :9000 (vendor/ is baked into the image, so start is fast).
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 60s
+      start_interval: 2s
     restart: unless-stopped
     networks:
       - app-network
@@ -78,7 +87,7 @@ services:
       db:
         condition: service_healthy
       php:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - pg-network
