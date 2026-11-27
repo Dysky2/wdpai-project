@@ -224,6 +224,12 @@ Kontrast (obliczony wg WCAG, min. 4.5:1): tekst 16.8:1 (jasny) / 15.2:1 (ciemny)
 | `/standings` (steward) | desktop | 100 | 0 |
 | `/stewards/adjudicate/{id}` (steward) | desktop | 100 | 0 |
 
+Zrzuty raportów (`docs/screenshots/`):
+
+| `/incidents` (steward, desktop) | `/stewards/adjudicate/{id}` (steward, desktop) |
+|---|---|
+| ![Raport Lighthouse: Dziennik incydentów, Accessibility 100](docs/screenshots/wcag-lighthouse-incidents-desktop.png) | ![Raport Lighthouse: Orzeczenie, Accessibility 100](docs/screenshots/wcag-lighthouse-adjudicate-desktop.png) |
+
 **Naprawione uwagi:** pierwszy przebieg wykazał w nagłówku audyt `label-content-name-mismatch` (WCAG 2.5.3): `aria-label` logo („F1 Stewards, strona główna”) nie zawierał widocznego hasła „Portal zarządzania incydentami”. Etykieta (`app.brand_aria` w `config/lang/pl.php` i `en.php`) zawiera teraz całą widoczną treść logo i po poprawce wszystkie ekrany mają 0 niezaliczonych audytów.
 
 Ograniczenia: Lighthouse sprawdza automatycznie tylko część kryteriów WCAG. Nawigacja klawiaturą, czytnik ekranu i przełączanie motywu nie były tu testowane przeglądarkowo (opis ręcznego audytu kodu powyżej).
