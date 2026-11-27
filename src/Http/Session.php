@@ -120,7 +120,7 @@ final class Session implements LanguageProviderInterface, CsrfTokenStoreInterfac
         return [
             'lifetime' => 0,
             'path' => '/',
-            'secure' => $this->config->isProduction(),
+            'secure' => $this->config->isSessionCookieSecure(),
             'httponly' => true,
             'samesite' => 'Lax',
         ];
