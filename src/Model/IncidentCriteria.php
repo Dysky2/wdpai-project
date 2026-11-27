@@ -20,6 +20,7 @@ final class IncidentCriteria
      * @param ?int   $teamScope   null = every case (steward); otherwise only cases where that team reported or is accused
      * @param ?int   $grandPrixId null = every Grand Prix
      * @param string $statusGroup one of self::GROUPS
+     * @throws \InvalidArgumentException for an unknown status group (input is validated earlier, see IncidentListQuery)
      */
     public function __construct(
         private readonly ?int $teamScope,
@@ -27,6 +28,15 @@ final class IncidentCriteria
         private readonly string $statusGroup = self::GROUP_ALL,
         private readonly string $search = '',
     ) {
+        if (!self::isGroup($statusGroup)) {
+            throw new \InvalidArgumentException('Unknown status group: ' . $statusGroup);
+        }
+    }
+
+    /** True for a value accepted by the "status" filter of the incident log (HTML and API alike). */
+    public static function isGroup(string $value): bool
+    {
+        return in_array($value, self::GROUPS, true);
     }
 
     public function getTeamScope(): ?int { return $this->teamScope; }

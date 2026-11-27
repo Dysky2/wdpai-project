@@ -245,6 +245,12 @@ final class IncidentService
     {
         $evidence = $detail->getEvidence();
         $penalty = $detail->getPenalty();
+        $status = $detail->getStatus();
+        $penaltyLabel = $penalty === null ? null : $this->penaltyLabel($penalty['type'], $penalty['value']);
+        $involved = [['role' => $this->translator->translate('show.role_accused'), 'driver' => $detail->getAccused()]];
+        if ($detail->getAffected() !== null) {
+            $involved[] = ['role' => $this->translator->translate('show.role_affected'), 'driver' => $detail->getAffected()];
+        }
 
         return [
             'id' => $detail->getId(),
@@ -258,8 +264,13 @@ final class IncidentService
             'totalLaps' => $detail->getTotalLaps(),
             'accused' => $detail->getAccused(),
             'affected' => $detail->getAffected(),
-            'status' => $detail->getStatus()->value,
-            'statusLabel' => $this->statusLabel($detail->getStatus()->value),
+            'involved' => $involved,
+            'status' => $status->value,
+            'statusLabel' => $this->statusLabel($status->value),
+            'badgeLabel' => $penaltyLabel ?? $this->statusLabel($status->value),
+            // Steward actions offered by the state machine (the API still checks every transition).
+            'canInvestigate' => $status->canTransitionTo(IncidentStatus::UNDER_INVESTIGATION),
+            'canDecide' => $status === IncidentStatus::UNDER_INVESTIGATION,
             'reportedAt' => $detail->getReportedAt()->setTimezone(new \DateTimeZone('UTC'))->format('d.m.Y, H:i') . ' UTC',
             'reporter' => $detail->getReporterName(),
             'reporterTeam' => $detail->getReporterTeam(),
@@ -270,7 +281,7 @@ final class IncidentService
                 'sha256' => $evidence->getSha256(),
             ],
             'penalty' => $penalty === null ? null : [
-                'label' => $this->penaltyLabel($penalty['type'], $penalty['value']),
+                'label' => $penaltyLabel,
                 'points' => $penalty['points'],
                 'article' => $penalty['articleReference'],
                 'reason' => $penalty['reason'],
@@ -315,7 +326,7 @@ final class IncidentService
 
         return [
             'id' => $incident->getId(),
-            'code' => sprintf('INC-%03d', $incident->getId()),
+            'code' => $incident->getCode(),
             'status' => $target->value,
             'statusLabel' => $this->statusLabel($target->value),
             'url' => '/incidents/' . $incident->getId(),
@@ -329,16 +340,14 @@ final class IncidentService
             : number_format(max(1, (int) round($bytes / 1024)), 0, ',', '') . ' KB';
     }
 
-    /**
-     * @param string  $status one of IncidentCriteria::GROUPS (anything else means "all")
-     * @param ?string $gp     Grand Prix id, "all", or null for the active Grand Prix
-     */
-    public function list(User $user, string $status, ?string $gp, string $search, int $page): IncidentListResult
+    /** One page of the incident log in the user's scope; the query is already validated (IncidentListQuery). */
+    public function list(User $user, IncidentListQuery $query): IncidentListResult
     {
-        $status = in_array($status, IncidentCriteria::GROUPS, true) ? $status : IncidentCriteria::GROUP_ALL;
-        $search = mb_substr(trim($search), 0, 100);
+        $status = $query->getStatusGroup();
+        $search = mb_substr(trim($query->getSearch()), 0, 100);
+        $page = $query->getPage();
         $active = $this->grandsPrix->findActive();
-        $grandPrixId = $this->resolveGrandPrixId($gp, $active?->getId());
+        $grandPrixId = $this->resolveGrandPrixId($query->getGrandPrix(), $active?->getId());
 
         $teamScope = $user->isSteward() ? null : ($user->getTeamId() ?? 0);
         $criteria = new IncidentCriteria($teamScope, $grandPrixId, $status, $search);

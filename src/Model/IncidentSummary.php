@@ -25,7 +25,7 @@ final class IncidentSummary
     }
 
     public function getId(): int { return $this->id; }
-    public function getCode(): string { return sprintf('INC-%03d', $this->id); }
+    public function getCode(): string { return Incident::codeFor($this->id); }
     public function getLapNumber(): int { return $this->lapNumber; }
     /** @return list<array{number: int, code: string, name: string}> */
     public function getDrivers(): array { return $this->drivers; }

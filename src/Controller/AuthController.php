@@ -87,9 +87,29 @@ final class AuthController extends AbstractController
         return $this->render('login', [
             'pageTitle' => $this->view->t('login.page_title'),
             'pageClass' => 'page--centered',
-            'old' => ['email' => $email],
             'formError' => $error,
-            'errors' => $errors,
+            // Settings for partials/form-field.html.php; length limits come from the validator.
+            'emailField' => [
+                'id' => 'email',
+                'name' => 'email',
+                'label' => $this->view->t('login.email'),
+                'type' => 'email',
+                'autocomplete' => 'username',
+                'maxlength' => LoginValidator::EMAIL_MAX_LENGTH,
+                'placeholder' => $this->view->t('login.email_placeholder'),
+                'value' => $email,
+                'error' => $errors['email'] ?? null,
+            ],
+            'passwordField' => [
+                'id' => 'password',
+                'name' => 'password',
+                'label' => $this->view->t('login.password'),
+                'type' => 'password',
+                'autocomplete' => 'current-password',
+                'maxlength' => LoginValidator::PASSWORD_MAX_LENGTH,
+                'placeholder' => $this->view->t('login.password_placeholder'),
+                'error' => $errors['password'] ?? null,
+            ],
         ]);
     }
 }

@@ -20,17 +20,15 @@
 
                 <h2 class="section-label"><?= $view->te('show.drivers_involved') ?></h2>
                 <div class="drivers-involved">
-                    <?php foreach ([[$view->t('show.role_accused'), $incident['accused']], [$view->t('show.role_affected'), $incident['affected']]] as [$role, $driver]): ?>
-                        <?php if ($driver !== null): ?>
-                            <div class="driver-card">
-                                <span class="driver-card__number"><?= (int) $driver['number'] ?></span>
-                                <div>
-                                    <strong><?= $view->e($driver['name']) ?></strong>
-                                    <small><?= $view->e($driver['team']) ?></small>
-                                </div>
-                                <span class="meta-chip"><?= $view->e($role) ?></span>
+                    <?php foreach ($incident['involved'] as $involved): ?>
+                        <div class="driver-card">
+                            <span class="driver-card__number"><?= (int) $involved['driver']['number'] ?></span>
+                            <div>
+                                <strong><?= $view->e($involved['driver']['name']) ?></strong>
+                                <small><?= $view->e($involved['driver']['team']) ?></small>
                             </div>
-                        <?php endif; ?>
+                            <span class="meta-chip"><?= $view->e($involved['role']) ?></span>
+                        </div>
                     <?php endforeach; ?>
                 </div>
 
@@ -68,9 +66,9 @@
             <header class="card__header"><h2 class="card__title"><?= $view->te('show.ruling_status') ?></h2></header>
             <div class="card__body side-block">
                 <h3 class="section-label"><?= $view->te('show.current_ruling') ?></h3>
-                <p class="status-banner status-banner--<?= $incident['status'] === 'UNDER_INVESTIGATION' ? 'investigation' : 'default' ?>" data-status-banner>
+                <p class="status-banner status-banner--<?= $incident['canDecide'] ? 'investigation' : 'default' ?>" data-status-banner>
                     <?php
-                    $badge = ['status' => $incident['status'], 'label' => $incident['penalty']['label'] ?? $incident['statusLabel']];
+                    $badge = ['status' => $incident['status'], 'label' => $incident['badgeLabel']];
                     require __DIR__ . '/../partials/status-badge.html.php';
                     ?>
                 </p>
@@ -99,10 +97,10 @@
                 <div class="card__body actions">
                     <p class="text-muted"><?= $view->te('show.choose_ruling') ?></p>
                     <p class="alert alert--error" role="alert" data-incident-error hidden></p>
-                    <button class="button button--secondary button--block" type="button" data-incident-action="investigate" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'REPORTED' ? '' : ' disabled' ?>><?= $view->te('show.mark_investigation') ?></button>
-                    <a class="button button--block" data-adjudicate-link href="/stewards/adjudicate/<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? '' : ' hidden' ?>><?= $view->te('show.issue_penalty') ?> <span aria-hidden="true">→</span></a>
-                    <span class="button button--block button--disabled" data-adjudicate-disabled aria-disabled="true"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? ' hidden' : '' ?>><?= $view->te('show.issue_penalty') ?></span>
-                    <button class="button button--secondary button--block" type="button" data-incident-action="dismiss" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['status'] === 'UNDER_INVESTIGATION' ? '' : ' disabled' ?>><?= $view->te('show.dismiss') ?></button>
+                    <button class="button button--secondary button--block" type="button" data-incident-action="investigate" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['canInvestigate'] ? '' : ' disabled' ?>><?= $view->te('show.mark_investigation') ?></button>
+                    <a class="button button--block" data-adjudicate-link href="/stewards/adjudicate/<?= (int) $incident['id'] ?>"<?= $incident['canDecide'] ? '' : ' hidden' ?>><?= $view->te('show.issue_penalty') ?> <span aria-hidden="true">→</span></a>
+                    <span class="button button--block button--disabled" data-adjudicate-disabled aria-disabled="true"<?= $incident['canDecide'] ? ' hidden' : '' ?>><?= $view->te('show.issue_penalty') ?></span>
+                    <button class="button button--secondary button--block" type="button" data-incident-action="dismiss" data-incident-id="<?= (int) $incident['id'] ?>"<?= $incident['canDecide'] ? '' : ' disabled' ?>><?= $view->te('show.dismiss') ?></button>
                 </div>
             </section>
         <?php endif; ?>

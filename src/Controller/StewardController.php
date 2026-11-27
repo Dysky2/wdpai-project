@@ -76,7 +76,8 @@ final class StewardController extends AbstractController
         $response = $this->render('stewards/adjudicate', $this->shell->build('/incidents') + [
             'pageTitle' => $this->view->t('adjudicate.page_title', ['code' => $incident['code']]),
             'incident' => $incident,
-            'articles' => $form->getArticles(),
+            'articles' => $form->getArticleOptions(),
+            'selectedArticle' => $old['article_id'] ?? '',
             'sanctions' => $form->getSanctions(),
             'defaultSanction' => $old['sanction'] ?? $form->getDefaultSanction()->toField(),
             'defaultPoints' => isset($old['points']) ? (int) $old['points'] : $form->getDefaultPoints(),
@@ -108,7 +109,7 @@ final class StewardController extends AbstractController
     {
         return new IssuePenaltyCommand(
             $incidentId,
-            ctype_digit($input['article_id']) && strlen($input['article_id']) < 10 ? (int) $input['article_id'] : 0,
+            $this->positiveInt($input['article_id']),
             $input['sanction'],
             // A non-numeric value becomes -1 so that the service reports it as out of range.
             preg_match('/^\d{1,2}$/', $input['points']) === 1 ? (int) $input['points'] : -1,

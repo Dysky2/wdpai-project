@@ -39,7 +39,13 @@ final class Incident
     /** Display code, e.g. INC-042. */
     public function getCode(): string
     {
-        return sprintf('INC-%03d', $this->id ?? 0);
+        return self::codeFor($this->id ?? 0);
+    }
+
+    /** The single place that formats a case id as its display code ("INC-" + id padded to 3 digits). */
+    public static function codeFor(int $id): string
+    {
+        return sprintf('INC-%03d', $id);
     }
 
     public function withId(int $id): self

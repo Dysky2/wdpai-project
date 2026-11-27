@@ -14,16 +14,9 @@
 </header>
 
 <section class="kpi-grid" aria-label="<?= $view->te('incidents.kpi_aria') ?>">
-    <?php
-    foreach ([
-        ['label' => $view->t('kpi.total'), 'value' => $counts['TOTAL'], 'icon' => '▤'],
-        ['label' => $view->t('kpi.reported'), 'value' => $counts['REPORTED'], 'icon' => '!'],
-        ['label' => $view->t('kpi.investigation'), 'value' => $counts['UNDER_INVESTIGATION'], 'icon' => '⏳', 'tone' => 'warning'],
-        ['label' => $view->t('kpi.penalties'), 'value' => $counts['PENALTY_ISSUED'], 'icon' => '⚑', 'tone' => 'accent'],
-    ] as $kpi) {
-        require __DIR__ . '/../partials/kpi-card.html.php';
-    }
-    ?>
+    <?php foreach ($kpis as $kpi): ?>
+        <?php require __DIR__ . '/../partials/kpi-card.html.php'; ?>
+    <?php endforeach; ?>
 </section>
 
 <section class="card toolbar" aria-label="<?= $view->te('incidents.filters_aria') ?>">
@@ -46,16 +39,9 @@
     </form>
 
     <nav class="chips" aria-label="<?= $view->te('incidents.status_filter_aria') ?>" data-incidents-chips>
-        <?php
-        foreach ([
-            'all' => [$view->t('incidents.chip_all'), $counts['TOTAL']],
-            'reported' => [$view->t('incidents.chip_reported'), $counts['REPORTED']],
-            'investigation' => [$view->t('incidents.chip_investigation'), $counts['UNDER_INVESTIGATION']],
-            'closed' => [$view->t('incidents.chip_closed'), $counts['CLOSED']],
-        ] as $key => [$chipLabel, $chipCount]):
-            ?>
-            <a class="chip<?= $filter === $key ? ' chip--active' : '' ?>" href="/incidents?<?= $view->e(http_build_query(['status' => $key, 'q' => $query, 'gp' => $gpValue])) ?>"<?= $filter === $key ? ' aria-current="true"' : '' ?>>
-                <?= $view->e($chipLabel) ?> (<?= (int) $chipCount ?>)
+        <?php foreach ($chips as $chip): ?>
+            <a class="chip<?= $chip['active'] ? ' chip--active' : '' ?>" href="<?= $view->e($chip['href']) ?>"<?= $chip['active'] ? ' aria-current="true"' : '' ?>>
+                <?= $view->e($chip['label']) ?> (<?= (int) $chip['count'] ?>)
             </a>
         <?php endforeach; ?>
     </nav>
@@ -80,7 +66,7 @@
             <tbody data-incidents-body>
                 <?php foreach ($rows as $row): ?>
                     <tr>
-                        <td class="cell-lap"><span class="lap-chip">L<?= str_pad((string) $row['lap'], 2, '0', STR_PAD_LEFT) ?></span></td>
+                        <td class="cell-lap"><span class="lap-chip">L<?= $view->e($row['lapPadded']) ?></span></td>
                         <td class="cell-id"><strong class="incident-id"><?= $view->e($row['code']) ?></strong></td>
                         <td class="cell-drivers">
                             <?php foreach ($row['drivers'] as $index => $driver): ?>
@@ -94,7 +80,7 @@
                         </td>
                         <td class="cell-status">
                             <?php
-                            $badge = ['status' => $row['status'], 'label' => $row['penaltyLabel'] ?? $row['statusLabel']];
+                            $badge = ['status' => $row['status'], 'label' => $row['badgeLabel']];
                             require __DIR__ . '/../partials/status-badge.html.php';
                             ?>
                         </td>
@@ -105,12 +91,9 @@
         </table>
 
         <div class="table-footer">
-            <p data-incidents-summary role="status"><?= $view->te('incidents.summary', ['shown' => count($rows), 'total' => (int) $total]) ?></p>
+            <p data-incidents-summary role="status"><?= $view->te('incidents.summary', ['shown' => (int) $shown, 'total' => (int) $total]) ?></p>
             <div data-incidents-pager>
-                <?php
-                $pager = ['path' => '/incidents', 'params' => ['status' => $filter, 'q' => $query, 'gp' => $gpValue], 'page' => $page, 'pages' => $pages];
-                require __DIR__ . '/../partials/pagination.html.php';
-                ?>
+                <?php require __DIR__ . '/../partials/pagination.html.php'; ?>
             </div>
         </div>
     </div>

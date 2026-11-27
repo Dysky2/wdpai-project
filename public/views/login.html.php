@@ -13,10 +13,10 @@
                 <div class="alert alert--error" role="alert"><?= $view->e($formError) ?></div>
             <?php endif; ?>
             <?php
-            $field = ['id' => 'email', 'name' => 'email', 'label' => $view->t('login.email'), 'type' => 'email', 'autocomplete' => 'username', 'maxlength' => \App\Service\LoginValidator::EMAIL_MAX_LENGTH, 'placeholder' => $view->t('login.email_placeholder'), 'value' => $old['email'] ?? '', 'error' => $errors['email'] ?? null];
+            $field = $emailField;
             require __DIR__ . '/partials/form-field.html.php';
 
-            $field = ['id' => 'password', 'name' => 'password', 'label' => $view->t('login.password'), 'type' => 'password', 'autocomplete' => 'current-password', 'maxlength' => \App\Service\LoginValidator::PASSWORD_MAX_LENGTH, 'placeholder' => $view->t('login.password_placeholder'), 'error' => $errors['password'] ?? null];
+            $field = $passwordField;
             require __DIR__ . '/partials/form-field.html.php';
             ?>
             <button class="button button--block" type="submit"><?= $view->te('login.submit') ?> <span aria-hidden="true">→</span></button>

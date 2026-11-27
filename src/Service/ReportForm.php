@@ -40,4 +40,20 @@ final class ReportForm
     public function getOwnDrivers(): array { return $this->ownDrivers; }
     /** @return list<InfringementArticle> */
     public function getArticles(): array { return $this->articles; }
+
+    /** Upper bound of the lap field: laps of the default (active) Grand Prix, 0 when there is none. */
+    public function getMaxLap(): int
+    {
+        return $this->defaultGrandPrix?->getTotalLaps() ?? 0;
+    }
+
+    /** Grand Prix to preselect: the submitted value after an error, otherwise the default one ("" when none). */
+    public function selectedGrandPrixId(string $submitted): string
+    {
+        if ($submitted !== '' || $this->defaultGrandPrix === null) {
+            return $submitted;
+        }
+
+        return (string) $this->defaultGrandPrix->getId();
+    }
 }

@@ -7,6 +7,7 @@ namespace App\Tests\Support;
 use App\Model\Driver;
 use App\Model\GrandPrix;
 use App\Model\Incident;
+use App\Model\IncidentDetail;
 use App\Model\IncidentStatus;
 use App\Model\InfringementArticle;
 use App\Model\PenaltyType;
@@ -53,6 +54,30 @@ final class Fixtures
     public static function team(int $id = self::MERCEDES): Team
     {
         return new Team($id, 'Team ' . $id, 'DE');
+    }
+
+    /** Case file read model; $affected = false leaves out the affected driver. */
+    public static function incidentDetail(int $id, IncidentStatus $status, bool $affected = true): IncidentDetail
+    {
+        return new IncidentDetail(
+            $id,
+            'Monaco GP',
+            'Circuit de Monaco',
+            78,
+            10,
+            ['number' => 1, 'code' => 'VER', 'name' => 'Max Verstappen', 'team' => 'Red Bull', 'teamId' => self::RED_BULL],
+            $affected ? ['number' => 44, 'code' => 'HAM', 'name' => 'Lewis Hamilton', 'team' => 'Mercedes', 'teamId' => self::MERCEDES] : null,
+            'Collision',
+            'Art. 33.4',
+            'Opis incydentu wystarczająco długi',
+            $status,
+            self::now(),
+            'Toto Wolff',
+            'Mercedes',
+            self::MERCEDES,
+            null,
+            null,
+        );
     }
 
     public static function incident(int $id, IncidentStatus $status, int $accusedId = 20): Incident
