@@ -228,7 +228,6 @@ return [
     'adjudicate.submit' => 'Save and apply the penalty',
 
     // Validation messages (422)
-    'validation.api_query' => 'Invalid value for parameter ":param".',
     'validation.grand_prix_unknown' => 'Choose an existing Grand Prix session.',
     'validation.lap_range' => 'The lap number must be between 1 and :max.',
     'validation.accused_unknown' => 'Choose the accused driver from the list.',
@@ -279,6 +278,8 @@ return [
     'js.adjudicate.points_group' => 'Change the number of penalty points',
     'js.adjudicate.points_less' => 'Fewer points',
     'js.adjudicate.points_more' => 'More points',
+    'js.adjudicate.points_required' => 'Enter the penalty points.',
+    'js.adjudicate.points_range' => 'Penalty points: from :min to :max.',
     'js.api.network' => 'No connection to the server.',
     'js.api.server_error' => 'Server error (:status).',
     'js.driver_car' => 'Car :number',

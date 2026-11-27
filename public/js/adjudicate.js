@@ -14,11 +14,14 @@ export function initAdjudicateForm() {
     const projected = form.querySelector('[data-projected-points]');
     const insertButton = form.querySelector('[data-insert-precedent]');
     const current = Number(points.dataset.currentPoints ?? 0);
+    // Zakres punktów pochodzi z atrybutów min/max pola (serwer: 0-3).
+    const pointsMin = points.min !== '' ? Number(points.min) : 0;
+    const pointsMax = points.max !== '' ? Number(points.max) : 3;
     // Limity uzasadnienia pochodzą z atrybutów minlength/maxlength (serwer: PenaltyService::REASON_MIN/MAX).
     const reasonMin = Math.max(1, reason.minLength);
     const reasonMax = reason.maxLength > 0 ? reason.maxLength : Number.MAX_SAFE_INTEGER;
 
-    const clampPoints = () => Math.min(3, Math.max(0, Number.parseInt(points.value, 10) || 0));
+    const clampPoints = () => Math.min(pointsMax, Math.max(pointsMin, Number.parseInt(points.value, 10) || 0));
 
     const updateProjected = () => {
         if (projected) {
@@ -73,7 +76,10 @@ export function initAdjudicateForm() {
 
     attachValidation(form, [
         [article, [rules.required(t('js.adjudicate.article_required'))]],
-        [points, [rules.required('Podaj punkty karne.'), rules.range(0, 3, 'Punkty karne: od 0 do 3.')]],
+        [points, [
+            rules.required(t('js.adjudicate.points_required')),
+            rules.range(pointsMin, pointsMax, t('js.adjudicate.points_range', { min: pointsMin, max: pointsMax })),
+        ]],
         [reason, [
             rules.required(t('js.adjudicate.reason_required')),
             rules.length(reasonMin, reasonMax, t('js.adjudicate.reason_length', { min: reasonMin, max: reasonMax })),

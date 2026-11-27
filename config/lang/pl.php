@@ -229,7 +229,6 @@ return [
 
     // Validation messages (422)
     'validation.grand_prix_unknown' => 'Wybierz istniejącą sesję Grand Prix.',
-    'validation.api_query' => 'Nieprawidłowa wartość parametru „:param”.',
     'validation.lap_range' => 'Numer okrążenia musi mieścić się w zakresie 1–:max.',
     'validation.accused_unknown' => 'Wybierz oskarżonego kierowcę z listy.',
     'validation.accused_own_team' => 'Nie można oskarżyć kierowcy własnego zespołu.',
@@ -279,6 +278,8 @@ return [
     'js.adjudicate.points_group' => 'Zmień liczbę punktów karnych',
     'js.adjudicate.points_less' => 'Mniej punktów',
     'js.adjudicate.points_more' => 'Więcej punktów',
+    'js.adjudicate.points_required' => 'Podaj punkty karne.',
+    'js.adjudicate.points_range' => 'Punkty karne: od :min do :max.',
     'js.api.network' => 'Brak połączenia z serwerem.',
     'js.api.server_error' => 'Błąd serwera (:status).',
     'js.driver_car' => 'Bolid :number',
