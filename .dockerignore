@@ -1,0 +1,18 @@
+# Keep secrets, VCS data and local artefacts out of every build context (images must never contain .env).
+.git
+.gitignore
+.env
+.env.*
+.idea
+.vscode
+.claude
+.phpunit.cache
+vendor
+node_modules
+docs
+backups
+kryteria.md
+AGENTS.md
+CLAUDE.md
+public/uploads/*
+storage/logs/*
