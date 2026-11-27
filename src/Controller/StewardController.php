@@ -108,7 +108,7 @@ final class StewardController extends AbstractController
     {
         return new IssuePenaltyCommand(
             $incidentId,
-            ctype_digit($input['article_id']) && strlen($input['article_id']) < 10 ? (int) $input['article_id'] : 0,
+            $this->positiveInt($input['article_id']),
             $input['sanction'],
             // A non-numeric value becomes -1 so that the service reports it as out of range.
             preg_match('/^\d{1,2}$/', $input['points']) === 1 ? (int) $input['points'] : -1,

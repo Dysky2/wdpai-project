@@ -315,7 +315,7 @@ final class IncidentService
 
         return [
             'id' => $incident->getId(),
-            'code' => sprintf('INC-%03d', $incident->getId()),
+            'code' => $incident->getCode(),
             'status' => $target->value,
             'statusLabel' => $this->statusLabel($target->value),
             'url' => '/incidents/' . $incident->getId(),

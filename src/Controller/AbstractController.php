@@ -64,6 +64,15 @@ abstract class AbstractController
     }
 
     /**
+     * Form id field as a positive integer; 0 when the value is not one
+     * (services reject 0 like an unknown id, so the user gets a field error instead of a 500).
+     */
+    protected function positiveInt(string $value): int
+    {
+        return ctype_digit($value) && strlen($value) < 10 ? (int) $value : 0;
+    }
+
+    /**
      * Returns a JSON response.
      *
      * @param mixed $data   Data to encode as JSON

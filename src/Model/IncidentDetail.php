@@ -36,7 +36,7 @@ final class IncidentDetail
     }
 
     public function getId(): int { return $this->id; }
-    public function getCode(): string { return sprintf('INC-%03d', $this->id); }
+    public function getCode(): string { return Incident::codeFor($this->id); }
     public function getGrandPrixName(): string { return $this->grandPrixName; }
     public function getCircuitName(): string { return $this->circuitName; }
     public function getTotalLaps(): int { return $this->totalLaps; }

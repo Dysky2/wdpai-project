@@ -142,10 +142,4 @@ final class IncidentController extends AbstractController
             $request->getFile('evidence'),
         );
     }
-
-    /** 0 when the value is not a positive integer (the service rejects it like an unknown id). */
-    private function positiveInt(string $value): int
-    {
-        return ctype_digit($value) && strlen($value) < 10 ? (int) $value : 0;
-    }
 }
