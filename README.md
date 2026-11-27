@@ -470,7 +470,81 @@ Znane ograniczenie: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `AP
 
 ## Deploy
 
-> Link do wdrożenia zostanie dopisany po zrealizowaniu karty S8-31 (VPS + Docker Compose, HTTPS, `APP_ENV=production`). Do tego czasu aplikację uruchamia się lokalnie według sekcji „Szybki start”.
+> Link do wdrożenia zostanie dopisany po uruchomieniu na VPS (adres w postaci `https://<subdomena>.duckdns.org:<port>`). Do tego czasu aplikację uruchamia się lokalnie według sekcji „Szybki start”.
+
+Wdrożenie to współdzielony VPS bez `sudo` i bez firewalla, więc wszystko działa w Dockerze, a każdy port opublikowany przez `ports:` jest publiczny. Dlatego `docker-compose.prod.yaml` (projekt `apexsteward`, nazwane wolumeny, bez `container_name` i bez bind mountów kodu) publikuje **tylko** usługę `server` (HTTPS):
+
+| Usługa | Rola w produkcji | Port na hoście |
+|---|---|---|
+| `server` | Nginx z TLS, pliki `public/` wbudowane w obraz, dowody z wolumenu `uploads` (tylko odczyt, `X-Accel-Redirect`) | `${APP_PORT}` → 443 (jedyny publiczny) |
+| `php` | PHP-FPM, `composer install --no-dev`, opcache bez sprawdzania plików | brak |
+| `cron` | ten sam obraz co `php`, `crond` uruchamia zadanie jako `www-data` | brak |
+| `db` | PostgreSQL 16, schemat i seed wbudowane w obraz (import przy pustym wolumenie) | brak |
+| `acme` | `lego`: certyfikat Let's Encrypt dla `<DUCKDNS_SUBDOMAIN>.duckdns.org` przez DNS-01, odnawianie co 12 h | brak |
+| `mailpit`, `pgadmin-wdpai` | opcjonalne, profil `tools`, tylko `127.0.0.1` (tunel SSH) | `127.0.0.1:${MAILPIT_PORT}`, `127.0.0.1:${PGADMIN_PORT}` |
+
+Wolumeny: `pgdata` (baza), `uploads` (dowody, wspólny dla `php` i `server`), `logs` (`app.log`, `cron.log`, wspólny dla `php` i `cron`), `certs` (certyfikat dla Nginx), `acme-data` (konto i certyfikaty `lego`).
+
+**HTTPS bez własnej domeny.** Darmowa subdomena DuckDNS i certyfikat Let's Encrypt wystawiany wyzwaniem DNS-01 (rekord TXT ustawiany przez API DuckDNS), więc porty 80 i 443 nie są potrzebne. Do czasu wydania pierwszego certyfikatu Nginx startuje na tymczasowym certyfikacie samopodpisanym; co 5 minut sprawdza wolumen `certs` i po pojawieniu się nowego certyfikatu (pasującego do klucza) wykonuje `nginx -s reload`. Nagłówek `Strict-Transport-Security: max-age=604800`. Żądanie zwykłym HTTP na port TLS dostaje 301 na `https://` pod tym samym adresem i portem. Ciasteczko sesji ma flagę `Secure` (`APP_ENV=production`, `SESSION_SECURE_COOKIE=true`).
+
+### Pierwsze uruchomienie na VPS
+
+1. **DuckDNS** ([duckdns.org](https://www.duckdns.org)): zaloguj się, utwórz subdomenę, ustaw jej adres IP na publiczny adres VPS (pole „current ip” albo z VPS: `curl "https://www.duckdns.org/update?domains=<subdomena>&token=<token>&ip="`, puste `ip` = adres, z którego przyszło żądanie). Skopiuj token.
+2. **Klon repozytorium** (na koncie użytkownika, bez `sudo`):
+   ```bash
+   git clone https://github.com/Dysky2/wdpai-project.git apexsteward && cd apexsteward
+   ```
+3. **Konfiguracja** (plik `.env` jest w `.gitignore`):
+   ```bash
+   cp .env.production.example .env && chmod 600 .env
+   openssl rand -base64 24        # wygeneruj osobno dla DB_PASSWORD (i ewentualnie PGADMIN_DEFAULT_PASSWORD, MAILPIT_UI_AUTH)
+   ```
+   Uzupełnij w `.env`: `APP_PORT` (wolny port powyżej 1024 uzgodniony na VPS; sprawdź `docker ps` i `ss -ltn`, czy nie zajmuje go ktoś inny), `DB_PASSWORD`, `DUCKDNS_SUBDOMAIN` (sama nazwa, bez `.duckdns.org`), `DUCKDNS_TOKEN`, `ACME_EMAIL` (prawdziwa domena). Brak wymaganej wartości zatrzymuje `docker compose` z komunikatem. Przy pierwszej próbie można odkomentować `ACME_SERVER` (CA testowe Let's Encrypt, bez limitów, certyfikat niezaufany); po udanym teście zakomentuj go i wykonaj `docker compose -f docker-compose.prod.yaml up -d acme`, a usługa sama odrzuci certyfikat testowy i pobierze produkcyjny.
+4. **Start:**
+   ```bash
+   docker compose -f docker-compose.prod.yaml up -d --build
+   docker compose -f docker-compose.prod.yaml ps          # opublikowany tylko server
+   docker compose -f docker-compose.prod.yaml logs -f acme   # "certificate ready" po 1-5 min
+   docker compose -f docker-compose.prod.yaml logs server | grep tls   # "installed certificate" (do 5 min później)
+   ```
+   Aplikacja: `https://<subdomena>.duckdns.org:<APP_PORT>`. Sprawdzenie: `curl -s -D - -o /dev/null https://<subdomena>.duckdns.org:<APP_PORT>/login` → `200`, `Strict-Transport-Security` i `Set-Cookie: PHPSESSID=…; secure; HttpOnly; SameSite=Lax`.
+
+### Narzędzia przez tunel SSH (opcjonalnie)
+
+Mailpit i pgAdmin nie są publikowane publicznie. Uruchamia się je profilem `tools` na `127.0.0.1`; ten adres jest wspólny dla wszystkich użytkowników VPS, dlatego w `.env` ustaw wolne porty `MAILPIT_PORT`, `PGADMIN_PORT` oraz `MAILPIT_UI_AUTH` (`użytkownik:hasło`) i `PGADMIN_DEFAULT_PASSWORD`.
+
+```bash
+docker compose -f docker-compose.prod.yaml --profile tools up -d mailpit pgadmin-wdpai
+# na własnym komputerze:
+ssh -N -L 8025:127.0.0.1:<MAILPIT_PORT> -L 5050:127.0.0.1:<PGADMIN_PORT> <użytkownik>@<adres VPS>
+# potem http://localhost:8025 (Mailpit) i http://localhost:5050 (pgAdmin, serwer: db, port 5432)
+docker compose -f docker-compose.prod.yaml --profile tools stop mailpit pgadmin-wdpai   # po pracy
+```
+
+Bez profilu `tools` e-maile z orzeczeniami trafiają do Mailpita tylko wtedy, gdy działa; przy wyłączonym Mailpicie wysyłka się nie udaje, a kara i tak zostaje zapisana. Prawdziwy serwer pocztowy ustawia się w `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ENCRYPTION`.
+
+### CRON, backup, aktualizacja
+
+```bash
+# CRON działa sam (codziennie o północy UTC); ręczne wywołanie i log:
+docker compose -f docker-compose.prod.yaml exec -u www-data cron sh -c '. /etc/cron.env; php /app/bin/cron.php expire-penalties'
+docker compose -f docker-compose.prod.yaml exec php tail -n 20 storage/logs/cron.log
+
+# Backup bazy (pg_dump) i dowodów do ./backups (katalog w .gitignore, pliki z prawami 600):
+bash docker/db/backup.sh
+# Odtworzenie bazy z kopii:
+gunzip -c backups/apexsteward-db-<data>.sql.gz | docker compose -f docker-compose.prod.yaml exec -T db \
+  sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+
+# Aktualizacja do najnowszego main:
+bash docker/db/backup.sh
+git pull
+docker compose -f docker-compose.prod.yaml up -d --build
+```
+
+Schemat i seed importują się tylko przy pustym wolumenie `pgdata`. Zmiana schematu wymaga `docker compose -f docker-compose.prod.yaml down -v` (kasuje bazę, dowody i certyfikaty tego projektu) i ponownego `up`; najpierw wykonaj backup. Zwykłe zatrzymanie: `down` bez `-v`.
+
+**Konta demo w produkcji.** Konta `toto@mercedes.f1` i `steward@fia.org` z jawnym hasłem demo z tego README zostają, bo prowadzący musi się zalogować. Ryzyko: każdy, kto zna adres, może zalogować się jako sędzia i wydawać orzeczenia na danych demonstracyjnych. Ograniczenia: dane są wyłącznie fikcyjne, logowanie ma blokadę brute-force, a adres (subdomena i niestandardowy port) nie jest nigdzie reklamowany. Po ocenie należy zmienić hasła kont demo albo zatrzymać stos (`docker compose -f docker-compose.prod.yaml down`).
 
 ## Zasady developmentu
 
