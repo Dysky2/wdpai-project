@@ -46,13 +46,14 @@ Zrzuty pochodzą z działającej aplikacji z danymi z `db/seed.sql` (desktop 144
 
 ## Usługi Docker i mapowanie portów
 
-Projekt uruchamia 5 współpracujących usług w dedykowanych sieciach Docker:
+Projekt uruchamia 6 współpracujących usług w dedykowanych sieciach Docker:
 
 | Usługa | Obraz / Dockerfile | Port zewnętrzny (Host) | Port wewnętrzny (Kontener) | Opis |
 |---|---|---|---|---|
 | **`server`** | `docker/nginx/Dockerfile` | `8080` (`APP_PORT`) | `80` | Serwer HTTP Nginx, punkt wejścia do aplikacji |
 | **`php`** | `docker/php/Dockerfile` | - | `9000` | Interpreter PHP 8.3-FPM z rozszerzeniami PDO PgSQL |
 | **`db`** | `docker/db/Dockerfile` (Postgres 16) | `5432` (`POSTGRES_PORT`) | `5432` | Baza danych PostgreSQL z wolumenem `pgdata` |
+| **`cron`** | `docker/php/Dockerfile` (ten sam obraz co `php`) | - | - | `crond` w pierwszym planie; codziennie o północy `bin/cron.php expire-penalties` (patrz „Zadanie CRON”); startuje po zdrowej bazie `db` |
 | **`mailpit`** | `axllent/mailpit:latest` | `8025` (`MAILPIT_PORT`)<br>`1025` (`SMTP_PORT`) | `8025`<br>`1025` | Web UI podglądu poczty oraz serwer SMTP |
 | **`pgadmin-wdpai`** | `dpage/pgadmin4:latest` | `5050` (`PGADMIN_PORT`) | `80` | Graficzny interfejs administracji bazą PostgreSQL |
 
@@ -83,6 +84,7 @@ Konfiguracja aplikacji zarządzana jest przez zmienne środowiskowe. W repozytor
 | `SMTP_FROM` | `stewards@apexsteward.local` | Adres nadawcy orzeczeń |
 | `MAILPIT_PORT` | `8025` | Port Web UI skrzynki Mailpit na hoście |
 | `PGADMIN_PORT` | `5050` | Port interfejsu PgAdmin na hoście |
+| `PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD` | `admin@example.com`, `change_me` (wzorce) | Dane logowania do PgAdmin; wymagane, ustaw własne w `.env` |
 
 **Poczta:** po orzeczeniu z zaznaczonym `notify_team` `PhpMailerMailer` (PHPMailer, SMTP) wysyła „FIA Stewards Decision” (HTML + AltBody z `public/views/emails/`) do szefów zespołu ukaranego kierowcy i zespołu zgłaszającego. Wysyłka następuje po commicie transakcji; błąd SMTP trafia do `storage/logs/app.log` i nie cofa kary. Temat i treść e-maila są zawsze po angielsku, niezależnie od języka interfejsu: to oficjalne orzeczenie FIA, a język odbiorcy (szefów zespołów) nie jest przechowywany w bazie. Podgląd: <http://localhost:8025>.
 
@@ -232,7 +234,7 @@ Ograniczenia: Lighthouse sprawdza automatycznie tylko część kryteriów WCAG. 
 
 PostgreSQL 16, 8 tabel w 3NF. Schemat (`db/schema.sql`: tabele, ograniczenia, indeksy, widok `v_super_licence_standings`, trigger `set_updated_at`) i dane demo (`db/seed.sql`) ładują się automatycznie przy pierwszym starcie na pustym wolumenie, w tej kolejności. Pełny reset: `docker compose down -v && docker compose up -d`.
 
-**Eksport .sql** (schemat + dane aktualnej bazy): `docker compose exec db pg_dump -U docker apex_steward > export.sql`. Pliki `db/schema.sql` i `db/seed.sql` są gotowym eksportem startowym.
+**Eksport .sql** (schemat + dane aktualnej bazy): `docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > export.sql`. Kontener `db` dostaje użytkownika i nazwę bazy z `DB_USER` i `DB_NAME` z `.env` (domyślnie `apex_user` i `apex_steward`), więc polecenie działa dla dowolnych wartości; jawna postać to `pg_dump -U <DB_USER> <DB_NAME>`. Uwaga: użytkownik powstaje tylko przy pierwszym starcie na pustym wolumenie `pgdata`, więc po zmianie `DB_USER` w `.env` potrzebny jest pełny reset (patrz wyżej). Pliki `db/schema.sql` i `db/seed.sql` są gotowym eksportem startowym.
 
 **Dane demo:** 10 zespołów, 20 kierowców sezonu 2024, 3 Grand Prix (aktywne: 2024 Monaco), 7 artykułów regulaminu, 27 spraw (12 z Monaco: 3 zgłoszone, 2 w dochodzeniu, 3 z karą, 4 bez dalszych działań; reszta to wcześniejsze rundy będące źródłem punktów Superlicencji) i 18 kar. Daty kar są liczone względem `now()`.
 
