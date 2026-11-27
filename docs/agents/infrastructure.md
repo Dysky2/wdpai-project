@@ -222,7 +222,7 @@ Pamiętaj: skrypty z `./db` wykonują się tylko na pustym wolumenie; po zmianie
 Wymagania: publiczny URL, wersja z `main`, produkcyjna baza z importem schematu i seeda, zmienne środowiskowe w panelu, trwały dysk na `public/uploads`, HTTPS, link i krótki opis w README.
 
 Wybór platformy (sprawdź aktualne limity darmowych planów przed decyzją):
-- **VPS + Docker Compose** (rekomendowane: ta sama konfiguracja co lokalnie). Dodaj `docker-compose.prod.yaml` (bez bind-mountów, bez `pgadmin` i `mailpit`, `restart: unless-stopped`, `APP_ENV=production`) oraz reverse proxy z automatycznym HTTPS (np. Caddy).
+- **VPS + Docker Compose** (rekomendowane: ta sama konfiguracja co lokalnie). Dodaj `docker-compose.prod.yaml` (bez bind-mountów, bez `pgadmin` i `mailpit`, `restart: unless-stopped`, `APP_ENV=production`) oraz HTTPS: usługa `acme` (`docker/acme/`, klient lego, certyfikat Let's Encrypt dla `<DUCKDNS_SUBDOMAIN>.duckdns.org` metodą DNS-01 przez DuckDNS, odnawiany w pętli) i Nginx z TLS (`docker/nginx/nginx.prod.conf`, `Dockerfile.prod`) jako jedyny opublikowany port.
 - **PaaS (Render, Railway, Fly.io):** zwykle jeden kontener na usługę, więc potrzebny `Dockerfile.prod` z Nginx i PHP-FPM w jednym obrazie (supervisord) oraz zarządzany Postgres i wolumen na uploady.
 
 Obowiązkowe po wdrożeniu: logowanie na oba konta demo, pełny przepływ protestu i orzeczenia, e-mail (prawdziwy SMTP lub środowisko testowe), uruchomienie CRON, ciasteczka z flagą `Secure`.
