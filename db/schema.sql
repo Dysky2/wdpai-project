@@ -1,4 +1,4 @@
--- ApexSteward (FIA Stewards Hub) - schemat PostgreSQL 16 (8 tabel, 3NF)
+-- ApexSteward (FIA Stewards Hub) - schemat PostgreSQL 16 (9 tabel, 3NF)
 -- Widok v_super_licence_standings i trigger set_updated_at: na koncu pliku.
 -- Ladowane przez Docker (docker-entrypoint-initdb.d) tylko na pustym wolumenie.
 
