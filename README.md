@@ -470,7 +470,7 @@ Znane ograniczenie: flaga `Secure` działa dopiero po wdrożeniu pod HTTPS z `AP
 
 ## Deploy
 
-> Link do wdrożenia zostanie dopisany po zrealizowaniu karty S8-31 (VPS + Docker Compose, HTTPS, `APP_ENV=production`). Do tego czasu aplikację uruchamia się lokalnie według sekcji „Szybki start”.
+Aplikacja jest wdrożona na VPS (Docker, HTTPS) i działa pod adresem: **`https://<subdomena>.duckdns.org:<port>`** *(adres zostanie uzupełniony po wdrożeniu)*. Do logowania służą konta demo z sekcji „Baza danych”.
 
 ## Zasady developmentu
 

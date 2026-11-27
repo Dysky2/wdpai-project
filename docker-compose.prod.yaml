@@ -1,0 +1,158 @@
+# Production stack for a shared VPS (no sudo, no firewall): every published port is public,
+# so only `server` (HTTPS) is published. Usage (see README, section "Deploy"):
+#   cp .env.production.example .env   # fill in every value
+#   docker compose -f docker-compose.prod.yaml up -d --build
+# Optional tools on 127.0.0.1 only (SSH tunnel): add `--profile tools`.
+name: apexsteward
+
+x-app-env: &app-env
+  APP_NAME: ApexSteward
+  APP_ENV: ${APP_ENV:-production}
+  # Secure flag of the session cookie; `false` only as an emergency switch for plain HTTP.
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_NAME: ${DB_NAME:?set DB_NAME in .env}
+  DB_USER: ${DB_USER:?set DB_USER in .env}
+  DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+  # Default: internal Mailpit (profile `tools`); a real SMTP server is configured in .env.
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_ENCRYPTION: ${SMTP_ENCRYPTION:-}
+  SMTP_FROM: ${SMTP_FROM:-stewards@apexsteward.local}
+
+x-app-build: &app-build
+  context: .
+  dockerfile: docker/php/Dockerfile
+  args:
+    APP_BUILD_ENV: production
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile.prod
+    ports:
+      # The only published port: a free high port chosen on the VPS, never committed.
+      - "${APP_PORT:?set APP_PORT in .env (a free port above 1024)}:443"
+    volumes:
+      - uploads:/app/public/uploads:ro
+      - certs:/certs:ro
+    depends_on:
+      - php
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  php:
+    build: *app-build
+    image: ${COMPOSE_PROJECT_NAME}-app
+    environment: *app-env
+    volumes:
+      - uploads:/app/public/uploads
+      - logs:/app/storage/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+      - pg-network
+
+  cron:
+    image: ${COMPOSE_PROJECT_NAME}-app
+    pull_policy: never
+    # crond does not inherit the container environment, so dump DB_*, APP_* and SMTP_* to /etc/cron.env first.
+    # The job itself runs as www-data (crontab baked into the production image as /etc/crontabs/www-data).
+    command:
+      - sh
+      - -c
+      - "env | grep -E '^(DB_|APP_|SMTP_)' | sed \"s/^\\([^=]*\\)=\\(.*\\)$$/export \\1='\\2'/\" > /etc/cron.env && exec crond -f -l 8"
+    environment: *app-env
+    volumes:
+      - uploads:/app/public/uploads
+      - logs:/app/storage/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      php:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - pg-network
+
+  db:
+    build:
+      context: .
+      dockerfile: docker/db/Dockerfile
+    environment:
+      POSTGRES_DB: ${DB_NAME:?set DB_NAME in .env}
+      POSTGRES_USER: ${DB_USER:?set DB_USER in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - pg-network
+
+  acme:
+    build:
+      context: .
+      dockerfile: docker/acme/Dockerfile
+    environment:
+      DUCKDNS_SUBDOMAIN: ${DUCKDNS_SUBDOMAIN:?set DUCKDNS_SUBDOMAIN in .env}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN:?set DUCKDNS_TOKEN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+      ACME_SERVER: ${ACME_SERVER:-https://acme-v02.api.letsencrypt.org/directory}
+    volumes:
+      - acme-data:/data
+      - certs:/certs
+    restart: unless-stopped
+    networks:
+      - acme-network
+
+  # --- Optional tools (`--profile tools`), bound to 127.0.0.1 only: open them through an SSH tunnel. ---
+  mailpit:
+    image: axllent/mailpit:v1.24.1
+    profiles: ["tools"]
+    environment:
+      # Basic auth for the web UI: other users of the shared VPS can reach 127.0.0.1 as well.
+      MP_UI_AUTH: ${MAILPIT_UI_AUTH:-}
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
+    restart: unless-stopped
+    networks:
+      - pg-network
+
+  pgadmin-wdpai:
+    image: dpage/pgadmin4:9.3
+    profiles: ["tools"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-}
+    ports:
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - pg-network
+
+volumes:
+  pgdata:
+  uploads:
+  logs:
+  certs:
+  acme-data:
+
+networks:
+  app-network:
+  pg-network:
+  acme-network:

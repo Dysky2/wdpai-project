@@ -36,4 +36,19 @@ final class Config
     {
         return $this->get('APP_ENV') === 'production';
     }
+
+    /**
+     * Whether the session cookie carries the Secure flag (SESSION_SECURE_COOKIE).
+     * Unset or empty: follows APP_ENV (on in production). An explicit false/0/off/no is the
+     * emergency switch for a plain-HTTP deployment; any unrecognised value fails safe to true.
+     */
+    public function isSessionCookieSecure(): bool
+    {
+        $raw = trim($this->get('SESSION_SECURE_COOKIE') ?? '');
+        if ($raw === '') {
+            return $this->isProduction();
+        }
+
+        return filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+    }
 }

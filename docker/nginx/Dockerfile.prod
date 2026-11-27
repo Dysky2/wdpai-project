@@ -1,0 +1,22 @@
+# Production web server (docker-compose.prod.yaml): TLS, static files baked into the image.
+FROM nginx:stable-alpine
+
+# openssl: temporary self-signed certificate and certificate/key checks in the entrypoint.
+RUN apk add --no-cache openssl
+
+COPY docker/nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
+COPY docker/nginx/entrypoint.prod.sh /usr/local/bin/apex-entrypoint.sh
+# Strip CRLF (Windows checkouts) so the shebang line works.
+RUN sed -i 's/\r$//' /usr/local/bin/apex-entrypoint.sh \
+    && chmod +x /usr/local/bin/apex-entrypoint.sh
+
+# Document root (CSS, JS; index.php is needed by the `index` directive). public/uploads comes from
+# the shared `uploads` volume, not from the image (excluded in .dockerignore).
+COPY public/ /app/public/
+RUN mkdir -p /app/public/uploads
+
+EXPOSE 443
+
+ENTRYPOINT ["apex-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

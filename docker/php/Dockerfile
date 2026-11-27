@@ -46,8 +46,20 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
 
 COPY . .
 
+# local (default, docker-compose.yaml) or production (docker-compose.prod.yaml).
+ARG APP_BUILD_ENV=local
+
 # Autoloader baked into the image (used when /app is not bind-mounted, e.g. deploy).
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Production: no dev dependencies, opcache never re-checks files, cron job runs as www-data.
+RUN if [ "$APP_BUILD_ENV" = "production" ]; then \
+        composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
+        && echo 'opcache.validate_timestamps = 0' > /usr/local/etc/php/conf.d/zz-opcache-production.ini \
+        && sed 's/\r$//' docker/cron/crontab > /etc/crontabs/www-data; \
+    else \
+        composer install --no-interaction --prefer-dist --optimize-autoloader; \
+    fi \
+    && mkdir -p storage/logs public/uploads \
+    && chown www-data:www-data storage/logs public/uploads
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
