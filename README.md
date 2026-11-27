@@ -230,7 +230,7 @@ Ograniczenia: Lighthouse sprawdza automatycznie tylko część kryteriów WCAG. 
 
 ## Baza danych
 
-PostgreSQL 16, 8 tabel w 3NF. Schemat (`db/schema.sql`: tabele, ograniczenia, indeksy, widok `v_super_licence_standings`, trigger `set_updated_at`) i dane demo (`db/seed.sql`) ładują się automatycznie przy pierwszym starcie na pustym wolumenie, w tej kolejności. Pełny reset: `docker compose down -v && docker compose up -d`.
+PostgreSQL 16, 9 tabel w 3NF. Schemat (`db/schema.sql`: tabele, ograniczenia, indeksy, widok `v_super_licence_standings`, trigger `set_updated_at`) i dane demo (`db/seed.sql`) ładują się automatycznie przy pierwszym starcie na pustym wolumenie, w tej kolejności. Pełny reset: `docker compose down -v && docker compose up -d`.
 
 **Eksport .sql** (schemat + dane aktualnej bazy): `docker compose exec db pg_dump -U docker apex_steward > export.sql`. Pliki `db/schema.sql` i `db/seed.sql` są gotowym eksportem startowym.
 
@@ -345,7 +345,15 @@ erDiagram
         timestamptz expires_at
         boolean is_expired
     }
+    LOGIN_ATTEMPTS {
+        bigint id PK
+        string email_key
+        string ip_address
+        timestamptz attempted_at
+    }
 ```
+
+Tabela `login_attempts` nie ma kluczy obcych: zapisuje nieudane logowania (także dla nieistniejących kont, po znormalizowanym e-mailu), żeby ograniczać ataki brute-force.
 
 Akcje na kluczach obcych: `RESTRICT` wszędzie (zgłoszenia i orzeczenia to dokumenty), poza `incident_evidence.incident_id` → `CASCADE` (dowód nie istnieje bez sprawy).
 
