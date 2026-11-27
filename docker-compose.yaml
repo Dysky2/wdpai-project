@@ -8,7 +8,8 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - php
+      php:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -54,6 +55,15 @@ services:
       - .:/app
     depends_on:
       - db
+    healthcheck:
+      # Ready = PHP-FPM accepts connections on :9000. The entrypoint starts php-fpm only after
+      # `composer install`, so the first start on a clean clone needs a generous start_period.
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 300s
+      start_interval: 2s
     networks:
       - app-network
       - pg-network
@@ -73,6 +83,9 @@ services:
       - ./docker/cron/crontab:/etc/crontabs/root:ro
     depends_on:
       db:
+        condition: service_healthy
+      # Start only after php finished `composer install`, so the two entrypoints never write vendor/ at once.
+      php:
         condition: service_healthy
     restart: unless-stopped
     networks:
