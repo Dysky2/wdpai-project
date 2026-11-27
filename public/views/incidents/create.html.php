@@ -3,15 +3,9 @@
 declare(strict_types=1);
 
 /**
- * Protest form. Data: $form (App\Service\ReportForm), $old (submitted values), $errors (field => message).
+ * Protest form. Data: $form (App\Service\ReportForm), $team, $selectedGp (preselected Grand Prix id),
+ * $maxLap, $old (submitted values), $errors (field => message).
  */
-$defaultGp = $form->getDefaultGrandPrix();
-$selectedGp = $old['grand_prix_id'] ?? '';
-if ($selectedGp === '' && $defaultGp !== null) {
-    $selectedGp = (string) $defaultGp->getId();
-}
-$maxLap = $defaultGp?->getTotalLaps() ?? 0;
-$team = $form->getTeam();
 ?>
 <header class="page-header">
     <div>
@@ -95,7 +89,7 @@ $team = $form->getTeam();
                 <select id="infringement_article_id" name="infringement_article_id" required<?= isset($errors['infringement_article_id']) ? ' aria-invalid="true" aria-describedby="infringement_article_id-error"' : '' ?>>
                     <option value=""><?= $view->te('report.choose_article') ?></option>
                     <?php foreach ($form->getArticles() as $article): ?>
-                        <option value="<?= (int) $article->getId() ?>"<?= (string) $article->getId() === ($old['infringement_article_id'] ?? '') ? ' selected' : '' ?>><?= $view->e($article->getTitle() . ' (' . $article->getReference() . ')') ?></option>
+                        <option value="<?= (int) $article->getId() ?>"<?= (string) $article->getId() === ($old['infringement_article_id'] ?? '') ? ' selected' : '' ?>><?= $view->e($article->getTitle()) ?> (<?= $view->e($article->getReference()) ?>)</option>
                     <?php endforeach; ?>
                 </select>
                 <?php if (isset($errors['infringement_article_id'])): ?>

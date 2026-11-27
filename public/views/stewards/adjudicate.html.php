@@ -32,12 +32,10 @@
             <label for="article_id"><?= $view->te('adjudicate.article') ?> <span class="required"><?= $view->te('adjudicate.required') ?></span></label>
             <select id="article_id" name="article_id" required>
                 <?php foreach ($articles as $article): ?>
-                    <?php $preset = \App\Model\SanctionOption::forPreset($article->getDefaultPenaltyType(), $article->getDefaultSanctionValue()); ?>
-                    <option value="<?= (int) $article->getId() ?>"<?= (string) $article->getId() === ($old['article_id'] ?? '') ? ' selected' : '' ?>
-
-                            data-sanction="<?= $view->e($preset?->toField() ?? '') ?>"
-                            data-points="<?= (int) $article->getDefaultPoints() ?>"
-                            data-wording="<?= $view->e($article->getPrecedentWording()) ?>"><?= $view->e($article->getReference()) ?>: <?= $view->e($article->getTitle()) ?></option>
+                    <option value="<?= (int) $article['id'] ?>"<?= (string) $article['id'] === $selectedArticle ? ' selected' : '' ?>
+                            data-sanction="<?= $view->e($article['sanction']) ?>"
+                            data-points="<?= (int) $article['points'] ?>"
+                            data-wording="<?= $view->e($article['wording']) ?>"><?= $view->e($article['reference']) ?>: <?= $view->e($article['title']) ?></option>
                 <?php endforeach; ?>
             </select>
             <?php if (isset($errors['article_id'])): ?>

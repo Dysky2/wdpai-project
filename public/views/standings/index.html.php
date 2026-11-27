@@ -8,16 +8,9 @@
 </header>
 
 <section class="kpi-grid" aria-label="<?= $view->te('standings.kpi_aria') ?>">
-    <?php
-    foreach ([
-        ['label' => $view->t('standings.kpi_tracked'), 'value' => $view->t('standings.kpi_drivers', ['count' => $kpis['total']]), 'caption' => $view->t('standings.kpi_tracked_caption'), 'icon' => '☰'],
-        ['label' => $view->t('standings.kpi_critical'), 'value' => $kpis['top']['name'], 'caption' => $view->t('standings.kpi_critical_caption', ['points' => $kpis['top']['points'], 'left' => $kpis['toBan']]), 'icon' => '⚠', 'tone' => 'accent'],
-        ['label' => $view->t('standings.kpi_pending'), 'value' => $view->t('standings.kpi_cases', ['count' => $kpis['pending']]), 'caption' => $view->t('standings.kpi_pending_caption'), 'icon' => '⚑', 'tone' => 'warning'],
-        ['label' => $view->t('standings.kpi_clean'), 'value' => $view->t('standings.kpi_drivers', ['count' => $kpis['clean']]), 'caption' => $view->t('standings.kpi_clean_caption', ['percent' => $kpis['cleanPercent']]), 'icon' => '✔'],
-    ] as $kpi) {
-        require __DIR__ . '/../partials/kpi-card.html.php';
-    }
-    ?>
+    <?php foreach ($kpis as $kpi): ?>
+        <?php require __DIR__ . '/../partials/kpi-card.html.php'; ?>
+    <?php endforeach; ?>
 </section>
 
 <section class="card toolbar" aria-label="<?= $view->te('standings.filters_aria') ?>">
@@ -31,11 +24,9 @@
     </form>
 
     <nav class="chips" aria-label="<?= $view->te('standings.driver_filter_aria') ?>">
-        <?php
-        foreach (['all' => $view->t('standings.chip_all'), 'risk' => $view->t('standings.chip_risk'), 'clean' => $view->t('standings.chip_clean')] as $key => $chipLabel):
-            ?>
-            <a class="chip<?= $filter === $key ? ' chip--active' : '' ?>" href="/standings?<?= $view->e(http_build_query(['filter' => $key, 'q' => $query])) ?>"<?= $filter === $key ? ' aria-current="true"' : '' ?>>
-                <?= $view->e($chipLabel) ?>
+        <?php foreach ($chips as $chip): ?>
+            <a class="chip<?= $chip['active'] ? ' chip--active' : '' ?>" href="<?= $view->e($chip['href']) ?>"<?= $chip['active'] ? ' aria-current="true"' : '' ?>>
+                <?= $view->e($chip['label']) ?>
             </a>
         <?php endforeach; ?>
     </nav>
@@ -66,10 +57,10 @@
                         <td class="cell-car"><span class="lap-chip">#<?= (int) $row['number'] ?></span></td>
                         <th class="cell-name" scope="row"><?= $view->e($row['name']) ?></th>
                         <td class="cell-team"><?= $view->e($row['team']) ?></td>
-                        <td class="cell-points"><strong><?= (int) $row['points'] ?></strong> / 12</td>
+                        <td class="cell-points"><strong><?= (int) $row['points'] ?></strong> / <?= (int) $pointsLimit ?></td>
                         <td class="cell-progress">
-                            <div class="progress" role="progressbar" aria-label="<?= $view->te('standings.progress_aria', ['name' => $row['name']]) ?>" aria-valuemin="0" aria-valuemax="12" aria-valuenow="<?= (int) $row['points'] ?>" aria-valuetext="<?= $view->te('standings.progress_text', ['points' => (int) $row['points']]) ?>">
-                                <span class="progress__bar progress__bar--<?= $row['points'] >= 9 ? 'high' : ($row['points'] >= 7 ? 'medium' : 'low') ?> progress__bar--p<?= min(12, (int) $row['points']) ?>"></span>
+                            <div class="progress" role="progressbar" aria-label="<?= $view->te('standings.progress_aria', ['name' => $row['name']]) ?>" aria-valuemin="0" aria-valuemax="<?= (int) $pointsLimit ?>" aria-valuenow="<?= (int) $row['points'] ?>" aria-valuetext="<?= $view->te('standings.progress_text', ['points' => (int) $row['points']]) ?>">
+                                <span class="progress__bar progress__bar--<?= $view->e($row['progressTone']) ?> progress__bar--p<?= (int) $row['progressStep'] ?>"></span>
                             </div>
                             <span class="progress__label"><?= (int) $row['percent'] ?>%</span>
                         </td>
@@ -93,11 +84,8 @@
         </table>
 
         <div class="table-footer">
-            <p><?= $view->te('standings.summary', ['shown' => count($rows), 'total' => (int) $total]) ?></p>
-            <?php
-            $pager = ['path' => '/standings', 'params' => ['filter' => $filter, 'q' => $query], 'page' => $page, 'pages' => $pages];
-            require __DIR__ . '/../partials/pagination.html.php';
-            ?>
+            <p><?= $view->te('standings.summary', ['shown' => (int) $shown, 'total' => (int) $total]) ?></p>
+            <?php require __DIR__ . '/../partials/pagination.html.php'; ?>
         </div>
     </div>
 <?php endif; ?>

@@ -76,7 +76,8 @@ final class StewardController extends AbstractController
         $response = $this->render('stewards/adjudicate', $this->shell->build('/incidents') + [
             'pageTitle' => $this->view->t('adjudicate.page_title', ['code' => $incident['code']]),
             'incident' => $incident,
-            'articles' => $form->getArticles(),
+            'articles' => $form->getArticleOptions(),
+            'selectedArticle' => $old['article_id'] ?? '',
             'sanctions' => $form->getSanctions(),
             'defaultSanction' => $old['sanction'] ?? $form->getDefaultSanction()->toField(),
             'defaultPoints' => isset($old['points']) ? (int) $old['points'] : $form->getDefaultPoints(),

@@ -29,6 +29,27 @@ final class AdjudicationForm
     public function getIncident(): IncidentDetail { return $this->incident; }
     /** @return list<InfringementArticle> */
     public function getArticles(): array { return $this->articles; }
+
+    /**
+     * Article select options with the preset each article suggests (sanction field value, points, precedent wording).
+     *
+     * @return list<array{id: int, reference: string, title: string, sanction: string, points: int, wording: string}>
+     */
+    public function getArticleOptions(): array
+    {
+        return array_map(
+            static fn (InfringementArticle $article): array => [
+                'id' => $article->getId(),
+                'reference' => $article->getReference(),
+                'title' => $article->getTitle(),
+                'sanction' => SanctionOption::forPreset($article->getDefaultPenaltyType(), $article->getDefaultSanctionValue())?->toField() ?? '',
+                'points' => $article->getDefaultPoints(),
+                'wording' => $article->getPrecedentWording(),
+            ],
+            $this->articles,
+        );
+    }
+
     /** @return list<SanctionOption> */
     public function getSanctions(): array { return $this->sanctions; }
     public function getDefaultSanction(): SanctionOption { return $this->defaultSanction; }

@@ -242,4 +242,35 @@ final class IncidentServiceTest extends TestCase
 
         $this->service->investigate(999);
     }
+
+    public function testDossierOffersInvestigationForReportedCase(): void
+    {
+        $dossier = $this->service->dossier(Fixtures::incidentDetail(42, IncidentStatus::REPORTED));
+
+        self::assertSame('INC-042', $dossier['code']);
+        self::assertTrue($dossier['canInvestigate']);
+        self::assertFalse($dossier['canDecide']);
+        self::assertSame($dossier['statusLabel'], $dossier['badgeLabel'], 'without a penalty the badge shows the status');
+        self::assertSame(['Max Verstappen', 'Lewis Hamilton'], array_map(
+            static fn (array $involved): string => $involved['driver']['name'],
+            $dossier['involved'],
+        ));
+    }
+
+    public function testDossierOfClosedCaseOffersNoStewardAction(): void
+    {
+        $dossier = $this->service->dossier(Fixtures::incidentDetail(42, IncidentStatus::NO_FURTHER_ACTION, false));
+
+        self::assertFalse($dossier['canInvestigate']);
+        self::assertFalse($dossier['canDecide']);
+        self::assertCount(1, $dossier['involved'], 'a missing affected driver is left out');
+    }
+
+    public function testDossierOfInvestigatedCaseAllowsDecision(): void
+    {
+        $dossier = $this->service->dossier(Fixtures::incidentDetail(42, IncidentStatus::UNDER_INVESTIGATION));
+
+        self::assertFalse($dossier['canInvestigate']);
+        self::assertTrue($dossier['canDecide']);
+    }
 }

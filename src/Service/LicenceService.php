@@ -101,6 +101,13 @@ final class LicenceService
             'team' => $row->getTeamName(),
             'points' => $row->getActivePoints(),
             'percent' => $row->getProgressPercent(),
+            // Bar colour and width step follow the licence thresholds (LicenceStatus is the only place with them).
+            'progressTone' => match ($status) {
+                LicenceStatus::Suspended, LicenceStatus::AtBanRisk => 'high',
+                LicenceStatus::Caution => 'medium',
+                LicenceStatus::Active, LicenceStatus::Clean => 'low',
+            },
+            'progressStep' => max(0, min(LicenceStatus::POINTS_LIMIT, $row->getActivePoints())),
             'expiry' => $expiry?->setTimezone($now->getTimezone())->format('d.m.Y'),
             'daysRemaining' => $expiry === null ? null : max(0, (int) $now->diff($expiry)->format('%a')),
             'status' => $status->value,

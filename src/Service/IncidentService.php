@@ -245,6 +245,12 @@ final class IncidentService
     {
         $evidence = $detail->getEvidence();
         $penalty = $detail->getPenalty();
+        $status = $detail->getStatus();
+        $penaltyLabel = $penalty === null ? null : $this->penaltyLabel($penalty['type'], $penalty['value']);
+        $involved = [['role' => $this->translator->translate('show.role_accused'), 'driver' => $detail->getAccused()]];
+        if ($detail->getAffected() !== null) {
+            $involved[] = ['role' => $this->translator->translate('show.role_affected'), 'driver' => $detail->getAffected()];
+        }
 
         return [
             'id' => $detail->getId(),
@@ -258,8 +264,13 @@ final class IncidentService
             'totalLaps' => $detail->getTotalLaps(),
             'accused' => $detail->getAccused(),
             'affected' => $detail->getAffected(),
-            'status' => $detail->getStatus()->value,
-            'statusLabel' => $this->statusLabel($detail->getStatus()->value),
+            'involved' => $involved,
+            'status' => $status->value,
+            'statusLabel' => $this->statusLabel($status->value),
+            'badgeLabel' => $penaltyLabel ?? $this->statusLabel($status->value),
+            // Steward actions offered by the state machine (the API still checks every transition).
+            'canInvestigate' => $status->canTransitionTo(IncidentStatus::UNDER_INVESTIGATION),
+            'canDecide' => $status === IncidentStatus::UNDER_INVESTIGATION,
             'reportedAt' => $detail->getReportedAt()->setTimezone(new \DateTimeZone('UTC'))->format('d.m.Y, H:i') . ' UTC',
             'reporter' => $detail->getReporterName(),
             'reporterTeam' => $detail->getReporterTeam(),
@@ -270,7 +281,7 @@ final class IncidentService
                 'sha256' => $evidence->getSha256(),
             ],
             'penalty' => $penalty === null ? null : [
-                'label' => $this->penaltyLabel($penalty['type'], $penalty['value']),
+                'label' => $penaltyLabel,
                 'points' => $penalty['points'],
                 'article' => $penalty['articleReference'],
                 'reason' => $penalty['reason'],

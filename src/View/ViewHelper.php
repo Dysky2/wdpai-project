@@ -10,6 +10,19 @@ use App\Http\Session;
 /** Helpers available in templates as $view. */
 final class ViewHelper
 {
+    /** CSS modifier of the status badge for case statuses and licence statuses (anything else: "closed"). */
+    private const BADGE_MODIFIERS = [
+        'REPORTED' => 'reported',
+        'UNDER_INVESTIGATION' => 'investigation',
+        'PENALTY_ISSUED' => 'penalty',
+        'NO_FURTHER_ACTION' => 'closed',
+        'SUSPENDED' => 'suspended',
+        'AT_BAN_RISK' => 'penalty',
+        'CAUTION' => 'investigation',
+        'ACTIVE' => 'closed',
+        'CLEAN' => 'reported',
+    ];
+
     public function __construct(
         private readonly Session $session,
         private readonly Translator $translator,
@@ -49,6 +62,12 @@ final class ViewHelper
     public function e(mixed $value): string
     {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    }
+
+    /** Badge modifier class for a status value, e.g. "UNDER_INVESTIGATION" -> "investigation". */
+    public function badgeModifier(string $status): string
+    {
+        return self::BADGE_MODIFIERS[$status] ?? 'closed';
     }
 
     /** @return list<array{type: string, message: string}> queued flash messages (cleared on read) */
