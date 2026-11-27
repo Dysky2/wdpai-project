@@ -383,6 +383,9 @@ docker compose up --build -d
 
 Autoloader Composera (`vendor/`) generuje się automatycznie: obraz PHP wykonuje `composer install` przy buildzie, a entrypoint (`docker/php/docker-entrypoint.sh`) powtarza to przy starcie kontenera, gdy brakuje `vendor/autoload.php` lub zmienił się `composer.lock` (bind mount `.:/app` przykrywa katalog z obrazu). Ręczna instalacja nie jest potrzebna.
 
+> [!NOTE]
+> Pierwszy start na czystym klonie trwa kilkadziesiąt sekund (dłużej na wolnym łączu), bo entrypoint instaluje zależności Composera. Usługa `php` ma healthcheck (PHP-FPM przyjmuje połączenia na porcie 9000), a `server` i `cron` startują dopiero, gdy `php` jest zdrowe, więc aplikacja nie zwraca w tym czasie 502. Stan sprawdzisz poleceniem `docker compose ps` (`php` ze statusem `healthy`). Można też uruchomić `docker compose up -d --build --wait`, które kończy się dopiero po starcie wszystkich usług.
+
 ### Dostęp do usług:
 - **Aplikacja webowa:** [http://localhost:8080](http://localhost:8080)
 - **Skrzynka pocztowa (Mailpit):** [http://localhost:8025](http://localhost:8025)
