@@ -329,16 +329,14 @@ final class IncidentService
             : number_format(max(1, (int) round($bytes / 1024)), 0, ',', '') . ' KB';
     }
 
-    /**
-     * @param string  $status one of IncidentCriteria::GROUPS (anything else means "all")
-     * @param ?string $gp     Grand Prix id, "all", or null for the active Grand Prix
-     */
-    public function list(User $user, string $status, ?string $gp, string $search, int $page): IncidentListResult
+    /** One page of the incident log in the user's scope; the query is already validated (IncidentListQuery). */
+    public function list(User $user, IncidentListQuery $query): IncidentListResult
     {
-        $status = in_array($status, IncidentCriteria::GROUPS, true) ? $status : IncidentCriteria::GROUP_ALL;
-        $search = mb_substr(trim($search), 0, 100);
+        $status = $query->getStatusGroup();
+        $search = mb_substr(trim($query->getSearch()), 0, 100);
+        $page = $query->getPage();
         $active = $this->grandsPrix->findActive();
-        $grandPrixId = $this->resolveGrandPrixId($gp, $active?->getId());
+        $grandPrixId = $this->resolveGrandPrixId($query->getGrandPrix(), $active?->getId());
 
         $teamScope = $user->isSteward() ? null : ($user->getTeamId() ?? 0);
         $criteria = new IncidentCriteria($teamScope, $grandPrixId, $status, $search);

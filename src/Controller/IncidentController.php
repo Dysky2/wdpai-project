@@ -9,7 +9,6 @@ use App\Exception\ValidationException;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\Session;
-use App\Model\IncidentCriteria;
 use App\Model\User;
 use App\Service\AuthService;
 use App\Service\Command\ReportIncidentCommand;
@@ -38,14 +37,8 @@ final class IncidentController extends AbstractController
     public function index(Request $request): Response
     {
         $user = $this->auth->currentUser() ?? throw new UnauthorizedException();
-        $gp = $request->getQuery('gp');
-        $result = $this->incidentService->list(
-            $user,
-            $this->queryString($request, 'status', IncidentCriteria::GROUP_ALL),
-            is_string($gp) ? $gp : null,
-            $this->queryString($request, 'q'),
-            (int) $this->queryString($request, 'page', '1'),
-        );
+        // Same validation as GET /api/incidents: an invalid status, gp or page gives the 422 error page.
+        $result = $this->incidentService->list($user, $this->incidentListQuery($request));
 
         return $this->render('incidents/index', $this->shell->build('/incidents') + [
             'pageTitle' => $this->view->t('incidents.page_title'),

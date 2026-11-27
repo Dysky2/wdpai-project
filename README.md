@@ -133,7 +133,7 @@ flowchart TD
 | Statyczna | `/login`, `/incidents` | dopasowanie dosłowne |
 | Parametr ścieżki | `/incidents/{id}` | `{id}` musi być liczbą całkowitą > 0, w przeciwnym razie **400** |
 | Regex | `/lang/(pl\|en)` | segment w nawiasach jest użyty jako wyrażenie regularne, brak dopasowania daje **404** |
-| Query | `/incidents?status=REPORTED&gp=3` | `$request->getQuery('status')` |
+| Query | `/incidents?status=reported&gp=3` | `$request->getQuery('status')`; parametry dziennika waliduje `IncidentListQuery` (`status`: `all\|reported\|investigation\|closed`), nieznana wartość daje **422** |
 
 Trasy z parametrem rejestruj po trasach statycznych o tym samym prefiksie (np. `/incidents/create` przed `/incidents/{id}`), bo router wybiera pierwszą pasującą.
 
@@ -156,12 +156,12 @@ Trasy są zdefiniowane w `config/routes.php`.
 | GET | `/lang/(pl\|en)` | `LanguageController::switch` (zapis języka w sesji, powrót na stronę z `Referer` tylko z tego samego hosta) |
 | GET, POST | `/login` | `AuthController::login` |
 | POST | `/logout` | `AuthController::logout` |
-| GET | `/incidents` | `IncidentController::index` (query: `status`, `q`, `page`) |
+| GET | `/incidents` | `IncidentController::index` (query: `status` = `all\|reported\|investigation\|closed`, `gp` = `all` lub id, `q`, `page`; walidacja wspólna z `/api/incidents` (`IncidentListQuery`): błędne `status`, `gp` lub `page` → strona błędu 422) |
 | GET | `/incidents/create`, POST `/incidents` | `IncidentController::create` (protest można złożyć tylko dla aktywnego Grand Prix: lista wyboru zawiera wyłącznie je, a serwer odrzuca każde inne `grand_prix_id` błędem 422 `validation.grand_prix_unknown`) |
 | GET | `/incidents/{id}` | `IncidentController::show` (akta sprawy z bazy: JOIN GP, kierowców, zespołów, artykułu, dowodu i kary; `IncidentService::getForUser`: brak sprawy → 404, cudza sprawa → 403; panel „Akcje sędziego” tylko dla `FIA_STEWARD`) |
 | GET, POST | `/stewards/adjudicate/{id}` | `StewardController::adjudicate` (formularz orzekania z presetami artykułów z bazy i prognozą punktów; sprawa musi być `UNDER_INVESTIGATION`, inaczej 422; zapis kary w S3-17) |
 | GET | `/standings` | `StandingsController::index` (query: `filter`, `q`, `page`) |
-| GET | `/api/incidents` | `ApiIncidentController::index` (JSON `{data: [IncidentRow], meta: {page, perPage, total}}`, te same query i zakres co `/incidents`; błędne `status`, `gp` lub `page` → 422 w kontrakcie błędów, `perPage` jest stałe po stronie serwera, a `page` większe niż ostatnia strona jest przycinane do ostatniej) |
+| GET | `/api/incidents` | `ApiIncidentController::index` (JSON `{data: [IncidentRow], meta: {page, perPage, total}}`, te same query, walidacja i zakres co `/incidents`; błędne `status`, `gp` lub `page` → 422 w kontrakcie błędów, `perPage` jest stałe po stronie serwera, a `page` większe niż ostatnia strona jest przycinane do ostatniej) |
 | POST | `/api/incidents/{id}/investigate` | `ApiIncidentController::investigate` (tylko `FIA_STEWARD`, nagłówek `X-CSRF-Token`; `REPORTED` → `UNDER_INVESTIGATION`) |
 | POST | `/api/incidents/{id}/dismiss` | `ApiIncidentController::dismiss` (tylko `FIA_STEWARD`; `UNDER_INVESTIGATION` → `NO_FURTHER_ACTION`) |
 

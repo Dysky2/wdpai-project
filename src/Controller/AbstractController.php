@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Http\JsonResponse;
 use App\Http\Request;
 use App\Http\Response;
+use App\Service\IncidentListQuery;
 use App\View\ViewHelper;
 
 abstract class AbstractController
@@ -61,6 +62,18 @@ abstract class AbstractController
         $value = $request->getQuery($key, $default);
 
         return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Validated incident-log query, shared by the HTML log and the JSON API.
+     *
+     * @throws \App\Exception\UnprocessableEntityException for an invalid status, gp or page (HTTP 422)
+     */
+    protected function incidentListQuery(Request $request): IncidentListQuery
+    {
+        $query = $request->getQuery();
+
+        return IncidentListQuery::fromArray(is_array($query) ? $query : []);
     }
 
     /**
